@@ -15,9 +15,6 @@ subtitle:  //article//header/p[has-class("article-lede")]
 author:         "Красный Кабан"
 published_date: //article//header//time/@datetime
 
-# Картинка для превью
-cover: //meta[@property="og:image"]/@content
-
 # ── Формулы LaTeX ──
 # На сайте формулы нарисованы KaTeX, а для Telegram рядом лежат PNG-картинки.
 # Убираем разметку KaTeX и включаем картинки.
