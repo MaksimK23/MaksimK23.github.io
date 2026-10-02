@@ -6,6 +6,10 @@ tags: ["политэкономия", "империализм", "критика",
 slug: "o-prichinah-svo-oleg-komolov"
 ---
 
+<div class="video-wrap">
+  <iframe src="https://www.youtube-nocookie.com/embed/lgpQ0LWxO10" title="О причинах СВО без шелухи // Олег Комолов. Простые числа" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</div>
+
 ### Структурная карта аналитического исследования видеоматериала
 
 1. Блок 1 [00:00:00 — 00:02:26]: Критика идеалистических ширм и постановка вопроса о материальных истоках конфликта
