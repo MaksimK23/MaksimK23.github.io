@@ -12,7 +12,7 @@
 {{- $src := printf "math/%s.png" $id | absURL -}}
 {{- $html := transform.ToMath $tex (dict "displayMode" $block "throwOnError" false "output" "htmlAndMathml") -}}
 {{- if $block -}}
-<figure class="math math-block"><img class="math-iv" data-src="{{ $src }}" alt="{{ $tex }}" width="MATHW{{ $id }}" height="MATHH{{ $id }}"><span class="math-web">{{ $html }}</span></figure>
+<figure class="math math-block MATHK{{ $id }}"><img class="math-iv" data-src="{{ $src }}" alt="{{ $tex }}" width="MATHW{{ $id }}" height="MATHH{{ $id }}"><span class="math-web">{{ $html }}</span></figure>
 {{- else -}}
 <span class="math math-inline"><img class="math-iv" data-src="{{ $src }}" alt="{{ $tex }}" width="MATHW{{ $id }}" height="MATHH{{ $id }}"><span class="math-web">{{ $html }}</span></span>
 {{- end -}}

@@ -22,5 +22,9 @@ published_date: //article//header//time/@datetime
 @set_attr(src, @data-src): //img[has-class("math-iv")]
 # Формулы внутри текста — маленькие картинки в строке
 @replace_tag(<pic>): //span[has-class("math-inline")]/img
-# Отдельные формулы — картинки на всю строку
+# Отдельные формулы выносим из абзаца
 @split_parent: //p/figure[has-class("math-block")]
+# Обычные отдельные формулы — в натуральном размере, своим абзацем
+@replace_tag(<pic>): //figure[has-class("math-pic")]/img
+@replace_tag(<p>): //figure[has-class("math-pic")]
+# Очень широкие формулы остаются картинкой на всю ширину экрана
