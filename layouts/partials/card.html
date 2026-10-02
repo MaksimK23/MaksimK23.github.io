@@ -1,6 +1,13 @@
-<article class="card">
-  {{ partial "meta.html" . }}
-  <h2 class="card-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
-  <p class="card-desc">{{ or .Description .Summary | plainify | htmlUnescape | truncate 200 }}</p>
-  {{ partial "tags.html" . }}
+{{- $t := partial "thumb.html" . -}}
+{{- $tags := slice -}}{{- range .GetTerms "tags" -}}{{- $tags = $tags | append .LinkTitle -}}{{- end -}}
+<article class="card" data-tags="{{ delimit $tags "|" }}">
+  <div class="card-body">
+    {{ partial "meta.html" . }}
+    <h2 class="card-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+    <p class="card-desc">{{ or .Description .Summary | plainify | htmlUnescape | truncate 180 }}</p>
+    {{ with $t.source }}<p class="card-source"><span>Разбор видео</span>{{ . }}</p>{{ end }}
+  </div>
+  <a class="card-thumb{{ if $t.video }} is-video{{ end }}" href="{{ .RelPermalink }}" tabindex="-1" aria-hidden="true">
+    <img src="{{ $t.src }}" alt="" loading="lazy" width="480" height="270">
+  </a>
 </article>

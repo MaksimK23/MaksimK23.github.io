@@ -77,6 +77,17 @@
     });
   });
 
+  /* ═════════ Главная: фильтр по темам ═════════ */
+  document.querySelectorAll('.chips').forEach(function (box) {
+    var cards = document.querySelectorAll('.list .card[data-tags]');
+    box.addEventListener('click', function (e) {
+      var b = e.target.closest('.chip'); if (!b) return;
+      box.querySelectorAll('.chip').forEach(function (c) { c.classList.toggle('is-active', c === b); });
+      var f = b.dataset.filter;
+      cards.forEach(function (c) { c.hidden = !!f && c.dataset.tags.split('|').indexOf(f) < 0; });
+    });
+  });
+
   var prose = document.querySelector('.prose');
   var article = document.querySelector('.article');
   if (!prose || !article) return;

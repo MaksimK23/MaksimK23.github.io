@@ -1,0 +1,10 @@
+{{- /* Обложка статьи: image из шапки → обложка YouTube-видео из статьи → сгенерированное превью */ -}}
+{{- $src := "" -}}{{- $source := "" -}}{{- $isVideo := false -}}
+{{- with findRESubmatch `youtube(?:-nocookie)?\.com/embed/([\w-]+)` .RawContent 1 -}}
+  {{- $src = printf "https://i.ytimg.com/vi/%s/hqdefault.jpg" (index (index . 0) 1) -}}{{- $isVideo = true -}}
+{{- end -}}
+{{- with findRESubmatch `<iframe[^>]*title="([^"]+)"` .RawContent 1 -}}{{- $source = index (index . 0) 1 -}}{{- end -}}
+{{- with .Params.source -}}{{- $source = . -}}{{- end -}}
+{{- with .Params.image -}}{{- $src = . | relURL -}}{{- $isVideo = false -}}{{- end -}}
+{{- if not $src -}}{{- with .File -}}{{- $src = printf "og/%s.png" .ContentBaseName | relURL -}}{{- end -}}{{- end -}}
+{{- return (dict "src" $src "source" $source "video" $isVideo) -}}

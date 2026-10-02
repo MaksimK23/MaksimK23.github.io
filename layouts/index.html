@@ -1,13 +1,67 @@
 {{ define "main" }}
-<section class="wrap hero">
-  <p class="eyebrow">Статьи и заметки</p>
+{{ $pages := (where site.RegularPages "Section" "articles").ByDate.Reverse }}
+<section class="wrap home-hero">
   <h1>{{ site.Title }}</h1>
-  <div class="lede">{{ .Content }}</div>
+  <p class="home-tagline">{{ or .Params.tagline site.Params.description }}</p>
+  <div class="home-hero-actions">
+    <form class="home-search" action="{{ with site.GetPage "/search" }}{{ .RelPermalink }}{{ end }}" method="get" role="search">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" name="q" placeholder="Поиск по статьям" aria-label="Поиск по статьям">
+    </form>
+    <a class="home-about-link" href="#about">О проекте ↓</a>
+  </div>
 </section>
-<section class="wrap list" aria-label="Все статьи">
-  {{ $pages := where site.RegularPages "Section" "articles" }}
-  {{ range $pages.ByDate.Reverse }}{{ partial "card.html" . }}{{ else }}
-  <p class="empty">Статей пока нет. Добавьте первый .md файл в папку <code>content/articles</code>.</p>
-  {{ end }}
+
+{{ with $pages }}
+{{ $first := index . 0 }}
+{{ $t := partial "thumb.html" $first }}
+<section class="wrap featured" aria-label="Новая статья">
+  <a class="featured-media{{ if $t.video }} is-video{{ end }}" href="{{ $first.RelPermalink }}" tabindex="-1" aria-hidden="true">
+    <img src="{{ $t.src }}" alt="" width="960" height="540">
+    <span class="featured-badge">Новое</span>
+  </a>
+  <div class="featured-body">
+    {{ partial "meta.html" $first }}
+    <h2 class="featured-title"><a href="{{ $first.RelPermalink }}">{{ $first.Title }}</a></h2>
+    <p class="featured-desc">{{ or $first.Description $first.Summary | plainify | htmlUnescape | truncate 220 }}</p>
+    {{ with $t.source }}<p class="card-source"><span>Разбор видео</span>{{ . }}</p>{{ end }}
+    {{ with $first.Params.key_points }}
+    <ul class="featured-points">{{ range first 2 . }}<li>{{ . | markdownify }}</li>{{ end }}</ul>
+    {{ end }}
+    <a class="btn btn-primary featured-cta" href="{{ $first.RelPermalink }}">Читать · {{ $first.ReadingTime }} мин</a>
+  </div>
+</section>
+
+{{ $rest := after 1 . }}
+{{ if $rest }}
+<section class="wrap list-section" aria-label="Все статьи">
+  <div class="list-head">
+    <h2 class="section-label">Все статьи</h2>
+    {{ $all := slice }}{{ range $rest }}{{ range .GetTerms "tags" }}{{ $all = $all | append .LinkTitle }}{{ end }}{{ end }}
+    {{ $uniq := $all | uniq }}
+    {{ if and (ge (len $rest) 3) (gt (len $uniq) 1) }}
+    <div class="chips" role="group" aria-label="Фильтр по темам">
+      <button class="chip is-active" type="button" data-filter="">Все <span>{{ len $rest }}</span></button>
+      {{ range $uniq }}{{ $tag := . }}{{ $n := 0 }}{{ range $rest }}{{ range .GetTerms "tags" }}{{ if eq .LinkTitle $tag }}{{ $n = add $n 1 }}{{ end }}{{ end }}{{ end }}
+      <button class="chip" type="button" data-filter="{{ $tag }}">#{{ $tag }} <span>{{ $n }}</span></button>
+      {{ end }}
+    </div>
+    {{ end }}
+  </div>
+  <div class="list">
+    {{ range $rest }}{{ partial "card.html" . }}{{ end }}
+  </div>
+</section>
+{{ end }}
+{{ else }}
+<section class="wrap"><p class="empty">Статей пока нет. Добавьте первый .md файл в папку <code>content/articles</code>.</p></section>
+{{ end }}
+
+<section class="wrap about" id="about" aria-label="О проекте">
+  <div class="about-inner">
+    <p class="section-label">О проекте</p>
+    <div class="about-text">{{ .Content }}</div>
+    <p class="about-stats">{{ len $pages }} {{ cond (eq (len $pages) 1) "статья" (cond (lt (len $pages) 5) "статьи" "статей") }} · {{ $m := 0 }}{{ range $pages }}{{ $m = add $m .ReadingTime }}{{ end }}{{ $m }} мин чтения · <a href="{{ with site.GetPage "/tags" }}{{ .RelPermalink }}{{ end }}">все темы</a></p>
+  </div>
 </section>
 {{ end }}
