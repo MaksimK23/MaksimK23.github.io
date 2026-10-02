@@ -170,6 +170,8 @@ img, svg, video { max-width: 100%; height: auto; }
 
 .prose .katex-display { overflow-x: auto; overflow-y: hidden; padding: .25rem 0; }
 .prose .katex { font-size: 1.05em; }
+.prose .math-block { margin: 1.25em 0 0; }
+.math-iv { display: none !important; }
 
 /* ───────── Низ статьи ───────── */
 .article-foot { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
