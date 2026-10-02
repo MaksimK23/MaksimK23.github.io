@@ -14,6 +14,8 @@ summaryLength = 40
   description = "Материалы, политэкономический анализ и критические статьи проекта «Красный Кабан»."
   # Картинка для превью ссылок (Telegram, WhatsApp). Положите файл в static/
   ogImage = "og-default.png"
+  # Хеш Instant View для Telegram (если настроен на instantview.telegram.org)
+  telegram_iv_rhash = ""
 
 [taxonomies]
   tag = "tags"

@@ -28,8 +28,19 @@
     var url = box.dataset.url || location.href, title = box.dataset.title || document.title;
     var shareBtn = box.querySelector('[data-share]'), copyBtn = box.querySelector('[data-copy]');
     if (shareBtn) {
-      if (!navigator.share) shareBtn.hidden = true;
-      shareBtn.addEventListener('click', function () { navigator.share({ title: title, url: url }).catch(function () {}); });
+      shareBtn.addEventListener('click', function () {
+        if (navigator.share) {
+          navigator.share({ title: title, url: url }).catch(function (err) {
+            // Если пользователь отменил диалог вручную — не шумим
+            if (err && err.name === 'AbortError') return;
+            // Если возникла системная ошибка WebView или браузер заблокировал вызов — копируем ссылку
+            copy(url).then(function () { notify('Ссылка скопирована'); });
+          });
+        } else {
+          // Если navigator.share не поддерживается в текущем окружении
+          copy(url).then(function () { notify('Ссылка скопирована'); });
+        }
+      });
     }
     if (copyBtn) copyBtn.addEventListener('click', function () {
       copy(url).then(function () { notify('Ссылка скопирована'); });
