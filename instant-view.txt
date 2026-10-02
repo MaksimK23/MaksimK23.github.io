@@ -28,3 +28,8 @@ published_date: //article//header//time/@datetime
 @replace_tag(<pic>): //figure[has-class("math-pic")]/img
 @replace_tag(<p>): //figure[has-class("math-pic")]
 # Очень широкие формулы остаются картинкой на всю ширину экрана
+
+# ── Видео YouTube ──
+@wrap(<figure>): //div[has-class("video-wrap")]/iframe
+@replace_tag(<video>): //figure/iframe[contains(@src, "youtube.com") or contains(@src, "youtu.be")]
+
