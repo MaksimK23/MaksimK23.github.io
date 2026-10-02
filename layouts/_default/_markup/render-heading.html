@@ -1,0 +1,11 @@
+{{- /* Заголовки: якорь-ссылка «#» и разметка для заголовков вида «Блок 3 [00:02:56 — 00:03:45]: Название» */ -}}
+{{- $plain := .PlainText -}}
+{{- $m := findRESubmatch `^Блок\s+(\d+)\s*(?:\[([^\]]+)\])?\s*[:.—-]\s*(.+)$` $plain 1 -}}
+<h{{ .Level }} id="{{ .Anchor }}"{{ with $m }} class="block-heading" data-block="{{ index (index . 0) 1 }}"{{ end }}>
+{{- with $m -}}
+{{- $g := index . 0 -}}
+<span class="block-kicker"><span class="block-num">Блок {{ index $g 1 }}</span>{{ with index $g 2 }}<span class="block-time" data-range="{{ . }}">{{ . }}</span>{{ end }}</span><span class="block-title">{{ index $g 3 }}</span>
+{{- else -}}
+{{ .Text }}
+{{- end -}}
+<a class="h-anchor" data-pagefind-ignore href="#{{ .Anchor }}" aria-label="Ссылка на этот раздел">#</a></h{{ .Level }}>

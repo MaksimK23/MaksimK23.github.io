@@ -14,8 +14,19 @@
 <meta property="og:type" content="{{ cond .IsPage "article" "website" }}">
 <meta property="og:url" content="{{ .Permalink }}">
 <meta property="og:locale" content="ru_RU">
-{{ $img := or .Params.image site.Params.ogImage }}
-{{ with $img }}<meta property="og:image" content="{{ . | absURL }}">{{ end }}
+{{- /* Превью-картинка: своя для каждой статьи (рисуется при сборке scripts/build-assets.mjs) */ -}}
+{{ $img := site.Params.ogImage }}
+{{ if .Params.image }}{{ $img = .Params.image }}
+{{ else if and .IsPage .File (eq .Section "articles") }}
+  {{ $name := .File.ContentBaseName }}
+  {{ $tags := slice }}{{ range .GetTerms "tags" }}{{ $tags = $tags | append .LinkTitle }}{{ end }}
+  {{ $job := dict "title" .Title "date" (.Date | time.Format ":date_long") "minutes" .ReadingTime "tags" $tags "site" site.Title }}
+  {{ $r := resources.FromString (printf "og/%s.json" $name) ($job | jsonify) }}{{ $r.Publish }}
+  {{ $img = printf "og/%s.png" $name }}
+{{ end }}
+<meta property="og:image" content="{{ $img | absURL }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 {{ if .IsPage }}<meta property="article:published_time" content="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ end }}
 
@@ -24,6 +35,8 @@
     var t = localStorage.getItem('theme');
     if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', t);
+    var fs = localStorage.getItem('fs');
+    if (fs) document.documentElement.setAttribute('data-fs', fs);
   })();
 </script>
 

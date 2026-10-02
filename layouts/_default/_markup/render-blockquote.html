@@ -1,0 +1,19 @@
+{{- /*
+  Выделенные блоки. В Markdown:
+    > [!THESIS] Необязательный заголовок
+    > Текст...
+  Типы: THESIS (тезис), FACT (факт), CRITIQUE (критика), NOTE (примечание), SUMMARY (итог), WARNING (важно)
+*/ -}}
+{{- if eq .Type "alert" -}}
+{{- $labels := dict "thesis" "Тезис" "fact" "Факт" "critique" "Критика" "note" "Примечание" "summary" "Итог" "warning" "Важно" "important" "Важно" "tip" "Совет" "caution" "Осторожно" -}}
+{{- $type := lower .AlertType -}}
+{{- $label := or .AlertTitle (index $labels $type) (title $type) -}}
+<aside class="callout callout-{{ $type }}">
+<p class="callout-title"><strong>{{ $label }}</strong></p>
+{{ .Text }}
+</aside>
+{{- else -}}
+<blockquote>
+{{ .Text }}
+</blockquote>
+{{- end -}}

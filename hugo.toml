@@ -16,6 +16,24 @@ summaryLength = 40
   ogImage = "og-default.png"
   # Хеш Instant View для Telegram (если настроен на instantview.telegram.org)
   telegram_iv_rhash = ""
+  # Ссылка на ваш Telegram-канал, например "https://t.me/krasny_kaban". Пусто — кнопка скрыта
+  telegram_channel = ""
+
+  # Комментарии Giscus (GitHub Discussions). Пусто — блок комментариев скрыт.
+  # Значения берутся на https://giscus.app после установки приложения Giscus в репозиторий
+  [params.giscus]
+    repo = ""
+    repoId = ""
+    category = ""
+    categoryId = ""
+
+[related]
+  includeNewer = true
+  threshold = 20
+  toLower = true
+  [[related.indices]]
+    name = "tags"
+    weight = 100
 
 [taxonomies]
   tag = "tags"

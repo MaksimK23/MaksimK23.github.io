@@ -41,6 +41,10 @@ jobs:
         run: hugo --gc --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
       - name: Картинки формул для Telegram Instant View
         run: node scripts/math-png.mjs public
+      - name: Превью-картинки статей
+        run: node scripts/og-images.mjs public
+      - name: Поисковый индекс
+        run: npx -y pagefind@1.3.0 --site public
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./public

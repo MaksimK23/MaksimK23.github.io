@@ -29,7 +29,18 @@ published_date: //article//header//time/@datetime
 @replace_tag(<p>): //figure[has-class("math-pic")]
 # Очень широкие формулы остаются картинкой на всю ширину экрана
 
+# ── Служебные элементы сайта ──
+@remove: //a[has-class("h-anchor")]
+@remove: //button[has-class("yt-facade")]
+@remove: //div[has-class("mini-bar")]
+# Видео: на сайте до клика показывается обложка, для Telegram возвращаем адрес плеера
+@set_attr(src, @data-src): //iframe[@data-src]
+# Заголовки «Блок N»: номер и время отдельной строкой
+@after(" · "): //span[has-class("block-num")]
+@after(". "): //span[has-class("block-kicker")]
+# Выделенные блоки (тезис, факт, критика) — как цитаты
+@replace_tag(<blockquote>): //aside[has-class("callout")]
+
 # ── Видео YouTube ──
 @wrap(<figure>): //div[has-class("video-wrap")]/iframe
 @replace_tag(<video>): //figure/iframe[contains(@src, "youtube.com") or contains(@src, "youtu.be")]
-

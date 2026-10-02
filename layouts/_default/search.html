@@ -1,0 +1,22 @@
+{{ define "main" }}
+<section class="wrap hero hero-sm">
+  <p class="eyebrow">Навигация</p>
+  <h1>Поиск по статьям</h1>
+</section>
+<section class="wrap search-wrap">
+  <div id="search"></div>
+  <noscript>Для поиска нужен JavaScript.</noscript>
+</section>
+<link rel="stylesheet" href="{{ "pagefind/pagefind-ui.css" | relURL }}">
+<script src="{{ "pagefind/pagefind-ui.js" | relURL }}"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    var s = document.querySelector('script[src*="pagefind-ui.js"]').src;
+    var base = new URL(s.replace(/pagefind\/pagefind-ui\.js.*$/, '')).pathname;
+    new PagefindUI({ element: '#search', baseUrl: base, showSubResults: true, showImages: false, resetStyles: false,
+      translations: { placeholder: 'Например: вывоз капитала', zero_results: 'По запросу «[SEARCH_TERM]» ничего не найдено' } });
+    var q = new URLSearchParams(location.search).get('q');
+    if (q) setTimeout(function(){ var i=document.querySelector('.pagefind-ui__search-input'); if(i){ i.value=q; i.dispatchEvent(new Event('input')); } }, 300);
+  });
+</script>
+{{ end }}
