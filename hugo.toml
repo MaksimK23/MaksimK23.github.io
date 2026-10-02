@@ -4,13 +4,13 @@
 baseURL = "https://example.org/"      # в GitHub Actions подставится автоматически
 languageCode = "ru-RU"
 defaultContentLanguage = "ru"
-title = "Заметки Максима"
+title = "Красный Кабан"
 enableRobotsTXT = true
 capitalizeListTitles = false
 summaryLength = 40
 
 [params]
-  author = "Максим Климушин"
+  author = "Красный Кабан"
   description = "Статьи и заметки об энергетике, технике и всём, что интересно."
   # Картинка для превью ссылок (Telegram, WhatsApp). Положите файл в static/
   ogImage = "og-default.png"
