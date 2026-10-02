@@ -136,7 +136,7 @@ img, svg, video { max-width: 100%; height: auto; }
 /* ───────── Текст статьи ───────── */
 .prose { hyphens: auto; overflow-wrap: break-word; font-size: calc(var(--text-base) * var(--fs, 1)); }
 .prose > * + * { margin-top: 1.25em; }
-.prose p { margin: 0; text-wrap: pretty; }
+.prose p { margin-bottom: 0; text-wrap: pretty; }
 .prose > :first-child { margin-top: 0; }
 .prose h2, .prose h3, .prose h4 { font-family: var(--font-body); line-height: 1.25; letter-spacing: -.015em; font-weight: 600; hyphens: manual; text-wrap: balance; }
 .prose h2 { font-size: var(--text-xl); margin: 2.25em 0 0; }
