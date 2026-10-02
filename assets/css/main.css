@@ -170,9 +170,6 @@ img, svg, video { max-width: 100%; height: auto; }
 
 .prose .katex-display { overflow-x: auto; overflow-y: hidden; padding: .25rem 0; }
 .prose .katex { font-size: 1.05em; }
-.prose .math-figure { margin: 1.75rem 0; text-align: center; }
-.prose .math-img { max-width: 100%; height: auto; display: inline-block; filter: invert(0); }
-[data-theme="dark"] .prose .math-img { filter: invert(0.9) hue-rotate(180deg); }
 
 /* ───────── Низ статьи ───────── */
 .article-foot { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
