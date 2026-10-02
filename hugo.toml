@@ -1,0 +1,44 @@
+# ─────────────────────────────────────────────
+#  Основные настройки сайта. Меняйте смело.
+# ─────────────────────────────────────────────
+baseURL = "https://example.org/"      # в GitHub Actions подставится автоматически
+languageCode = "ru-RU"
+defaultContentLanguage = "ru"
+title = "Заметки Максима"
+enableRobotsTXT = true
+capitalizeListTitles = false
+summaryLength = 40
+
+[params]
+  author = "Максим Климушин"
+  description = "Статьи и заметки об энергетике, технике и всём, что интересно."
+  # Картинка для превью ссылок (Telegram, WhatsApp). Положите файл в static/
+  ogImage = "og-default.png"
+
+[taxonomies]
+  tag = "tags"
+
+[permalinks]
+  articles = "/:slugorfilename/"
+
+[markup]
+  [markup.highlight]
+    noClasses = false
+    lineNos = false
+  [markup.tableOfContents]
+    startLevel = 2
+    endLevel = 3
+  [markup.goldmark.renderer]
+    unsafe = true
+  [markup.goldmark.extensions]
+    [markup.goldmark.extensions.typographer]
+      leftDoubleQuote = "«"
+      rightDoubleQuote = "»"
+    [markup.goldmark.extensions.passthrough]
+      enable = true
+      [markup.goldmark.extensions.passthrough.delimiters]
+        block = [['\[', '\]'], ['$$', '$$']]
+        inline = [['\(', '\)'], ['$', '$']]
+
+[outputs]
+  home = ["HTML", "RSS"]

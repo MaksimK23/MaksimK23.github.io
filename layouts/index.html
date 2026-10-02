@@ -1,0 +1,13 @@
+{{ define "main" }}
+<section class="wrap hero">
+  <p class="eyebrow">{{ site.Params.author }}</p>
+  <h1>{{ site.Title }}</h1>
+  <div class="lede">{{ .Content }}</div>
+</section>
+<section class="wrap list" aria-label="Все статьи">
+  {{ $pages := where site.RegularPages "Section" "articles" }}
+  {{ range $pages.ByDate.Reverse }}{{ partial "card.html" . }}{{ else }}
+  <p class="empty">Статей пока нет. Добавьте первый .md файл в папку <code>content/articles</code>.</p>
+  {{ end }}
+</section>
+{{ end }}

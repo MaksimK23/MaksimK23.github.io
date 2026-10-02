@@ -1,0 +1,6 @@
+<article class="card">
+  {{ partial "meta.html" . }}
+  <h2 class="card-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+  <p class="card-desc">{{ or .Description .Summary | plainify | htmlUnescape | truncate 200 }}</p>
+  {{ partial "tags.html" . }}
+</article>

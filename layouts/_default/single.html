@@ -1,0 +1,33 @@
+{{ define "main" }}
+<article class="wrap article">
+  <header class="article-head">
+    {{ partial "meta.html" . }}
+    <h1>{{ .Title }}</h1>
+    {{ with .Description }}<p class="article-lede">{{ . }}</p>{{ end }}
+    {{ partial "tags.html" . }}
+    {{ partial "share.html" . }}
+  </header>
+
+  {{ if and (gt .WordCount 400) (ne .Params.toc false) }}
+  {{ with .TableOfContents }}{{ if findRE "<li>" . 1 }}
+  <details class="toc">
+    <summary>Содержание</summary>
+    {{ . }}
+  </details>
+  {{ end }}{{ end }}
+  {{ end }}
+
+  <div class="prose">
+    {{ .Content }}
+  </div>
+
+  <footer class="article-foot">
+    <p class="foot-label">Понравилась статья? Отправьте её тому, кому она пригодится.</p>
+    {{ partial "share.html" . }}
+    <nav class="pager" aria-label="Другие статьи">
+      {{ with .NextInSection }}<a class="pager-link" href="{{ .RelPermalink }}"><span>← Новее</span>{{ .Title }}</a>{{ else }}<span></span>{{ end }}
+      {{ with .PrevInSection }}<a class="pager-link next" href="{{ .RelPermalink }}"><span>Старее →</span>{{ .Title }}</a>{{ end }}
+    </nav>
+  </footer>
+</article>
+{{ end }}

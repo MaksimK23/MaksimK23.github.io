@@ -1,0 +1,12 @@
+<div class="share" data-url="{{ .Permalink }}" data-title="{{ .Title }}">
+  <button class="btn btn-primary" type="button" data-share>
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>
+    Поделиться
+  </button>
+  <button class="btn" type="button" data-copy>
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+    <span data-copy-label>Копировать ссылку</span>
+  </button>
+  <a class="btn" target="_blank" rel="noopener" href="https://t.me/share/url?url={{ .Permalink | urlquery }}&text={{ .Title | urlquery }}">Telegram</a>
+  <a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text={{ printf "%s %s" .Title .Permalink | urlquery }}">WhatsApp</a>
+</div>

@@ -1,0 +1,13 @@
+{{ define "main" }}
+<section class="wrap hero hero-sm">
+  <p class="eyebrow">Навигация</p>
+  <h1>Темы</h1>
+</section>
+<section class="wrap">
+  <ul class="terms">
+    {{ range .Data.Terms.ByCount }}
+    <li><a href="{{ .Page.RelPermalink }}">#{{ .Page.Title }}</a><span>{{ .Count }}</span></li>
+    {{ end }}
+  </ul>
+</section>
+{{ end }}
