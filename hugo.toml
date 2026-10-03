@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────
 #  Основные настройки сайта. Меняйте смело.
 # ─────────────────────────────────────────────
-baseURL = "https://example.org/"      # в GitHub Actions подставится автоматически
+baseURL = "https://maksimk23.github.io/"
 languageCode = "ru-RU"
 defaultContentLanguage = "ru"
 title = "Красный Кабан"
