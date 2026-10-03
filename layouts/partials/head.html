@@ -1,7 +1,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {{ $title := cond .IsHome site.Title (printf "%s — %s" .Title site.Title) }}
-{{ $desc := or .Description .Summary site.Params.description | plainify | htmlUnescape | truncate 180 }}
+{{ $desc := or .Description .Params.tagline .Summary site.Params.description | plainify | htmlUnescape | truncate 180 }}
 <title>{{ $title }}</title>
 <meta name="description" content="{{ $desc }}">
 <link rel="canonical" href="{{ .Permalink }}">
@@ -15,14 +15,14 @@
 <meta property="og:url" content="{{ .Permalink }}">
 <meta property="og:locale" content="ru_RU">
 {{- /* Превью-картинка: своя для каждой статьи (рисуется при сборке scripts/build-assets.mjs) */ -}}
-{{ $img := site.Params.ogImage }}
+{{ $img := printf "%s?v=%s" site.Params.ogImage (substr (md5 (os.ReadFile (printf "static/%s" site.Params.ogImage))) 0 8) }}
 {{ if .Params.image }}{{ $img = .Params.image }}
 {{ else if and .IsPage .File (eq .Section "articles") }}
   {{ $name := .File.ContentBaseName }}
   {{ $tags := slice }}{{ range .GetTerms "tags" }}{{ $tags = $tags | append .LinkTitle }}{{ end }}
   {{ $job := dict "title" .Title "date" (.Date | time.Format ":date_long") "minutes" .ReadingTime "tags" $tags "site" site.Title }}
   {{ $r := resources.FromString (printf "og/%s.json" $name) ($job | jsonify) }}{{ $r.Publish }}
-  {{ $img = printf "og/%s.png" $name }}
+  {{ $img = printf "og/%s.png?v=%s" $name (substr (md5 ($job | jsonify)) 0 8) }}
 {{ end }}
 <meta property="og:image" content="{{ $img | absURL }}">
 <meta property="og:image:width" content="1200">
