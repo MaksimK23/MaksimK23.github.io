@@ -4,8 +4,6 @@ name: Публикация сайта
 on:
   push:
     branches: ["main"]
-  pull_request:
-    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -23,7 +21,8 @@ jobs:
     steps:
       - name: Установка Hugo
         run: |
-          wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
+          wget -q -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
+          echo "af3c7b04328007ac84553a33f931d5cc5f4a0e5e530835d8aba1a9afd9dae7bd  ${{ runner.temp }}/hugo.deb" | sha256sum -c -
           sudo dpkg -i ${{ runner.temp }}/hugo.deb
 
       - uses: actions/checkout@v5
@@ -52,7 +51,7 @@ jobs:
         run: node scripts/og-images.mjs public
 
       - name: Поисковый индекс
-        run: npx -y pagefind@1.3.0 --site public
+        run: npm run pagefind
 
       - name: Проверка результата сборки
         run: |
