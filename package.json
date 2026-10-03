@@ -4,7 +4,8 @@
   "type": "module",
   "description": "Генерация PNG-картинок формул для Telegram Instant View",
   "scripts": {
-    "math": "node scripts/math-png.mjs public"
+    "math": "node scripts/math-png.mjs",
+    "og": "node scripts/og-images.mjs"
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
