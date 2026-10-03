@@ -142,7 +142,7 @@
     loadApi().then(function () {
       v.player = new YT.Player(v.iframe, { events: {
         onReady: function () { v.ready = true; if (v.pending != null) { v.player.seekTo(v.pending, true); v.player.playVideo(); v.pending = null; } },
-        onStateChange: function (e) { v.playing = e.data === 1 || e.data === 3; updateMini(); }
+        onStateChange: function (e) { v.playing = e.data === 1; v.ended = e.data === 0; if (v.playing && !v.inView && !v.miniOff) v.miniActive = true; if (v.ended) v.miniActive = false; updateMini(); }
       } });
     });
   }
@@ -151,14 +151,16 @@
     var v = { id: wrap.dataset.yt, wrap: wrap, iframe: wrap.querySelector('iframe'), slot: wrap.parentElement };
     videos[v.id] = v; if (!mainVideo) mainVideo = v;
     wrap.querySelector('.yt-facade').addEventListener('click', function () { startVideo(v, 0); });
-    wrap.querySelector('[data-mini-close]').addEventListener('click', function () { v.miniOff = true; if (v.player && v.player.pauseVideo) v.player.pauseVideo(); updateMini(); });
+    wrap.querySelector('[data-mini-close]').addEventListener('click', function () { v.miniOff = true; v.miniActive = false; if (v.player && v.player.pauseVideo) v.player.pauseVideo(); updateMini(); });
     wrap.querySelector('[data-mini-back]').addEventListener('click', function () { v.slot.scrollIntoView(scrollOptions('center')); });
     new IntersectionObserver(function (en) { v.inView = en[0].isIntersecting; if (v.inView) v.miniOff = false; updateMini(); }, { threshold: 0.25 }).observe(v.slot);
   });
   function updateMini() {
     Object.keys(videos).forEach(function (k) {
       var v = videos[k];
-      v.wrap.classList.toggle('is-mini', !!(v.playing && !v.inView && !v.miniOff));
+      if (v.inView) v.miniActive = false;
+      if (v.playing && !v.inView && !v.miniOff) v.miniActive = true;
+      v.wrap.classList.toggle('is-mini', !!(v.miniActive && !v.miniOff && !v.ended));
     });
   }
   function ytInfo(href) {
