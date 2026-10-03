@@ -25,10 +25,26 @@
   {{ $img = printf "og/%s.png?v=%s" $name (substr (md5 ($job | jsonify)) 0 8) }}
 {{ end }}
 <meta property="og:image" content="{{ $img | absURL }}">
+<meta property="og:image:alt" content="{{ cond .IsHome site.Title (printf "Обложка: %s" .Title) }}">
+<meta name="twitter:title" content="{{ cond .IsHome site.Title .Title }}">
+<meta name="twitter:description" content="{{ $desc }}">
+<meta name="twitter:image" content="{{ $img | absURL }}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-{{ if .IsPage }}<meta property="article:published_time" content="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ end }}
+{{ if .IsPage }}
+<meta property="article:published_time" content="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">
+<meta property="article:author" content="{{ site.Params.author }}">
+{{ range .GetTerms "tags" }}<meta property="article:tag" content="{{ .LinkTitle }}">{{ end }}
+{{ end }}
+
+{{ $schema := dict "@context" "https://schema.org" "@type" (cond .IsPage "Article" "WebSite") "headline" .Title "name" .Title "description" $desc "url" .Permalink "image" ($img | absURL) "inLanguage" "ru-RU" }}
+{{ if .IsPage }}
+  {{ $schema = merge $schema (dict "datePublished" (.Date.Format "2006-01-02T15:04:05Z07:00") "author" (dict "@type" "Person" "name" site.Params.author)) }}
+{{ else }}
+  {{ $schema = merge $schema (dict "publisher" (dict "@type" "Person" "name" site.Params.author)) }}
+{{ end }}
+<script type="application/ld+json">{{ $schema | jsonify | safeHTML }}</script>
 
 <script>
   (function () {

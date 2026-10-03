@@ -1,5 +1,7 @@
 (function () {
   var root = document.documentElement;
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  function scrollOptions(block) { return { behavior: reduceMotion.matches ? 'auto' : 'smooth', block: block || 'nearest' }; }
 
   // Тема
   var toggle = document.getElementById('theme-toggle');
@@ -98,7 +100,7 @@
       e.preventDefault();
       var url = location.href.split('#')[0] + a.getAttribute('href');
       history.replaceState(null, '', a.getAttribute('href'));
-      a.parentElement.scrollIntoView({ behavior: 'smooth' });
+      a.parentElement.scrollIntoView(scrollOptions());
       copy(url).then(function () { notify('Ссылка на раздел скопирована'); });
     });
   });
@@ -128,7 +130,7 @@
   function startVideo(v, sec, scroll) {
     if (scroll && !v.wrap.classList.contains('is-mini')) {
       var r = v.wrap.getBoundingClientRect();
-      if (r.top < 60 || r.bottom > innerHeight) v.wrap.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (r.top < 60 || r.bottom > innerHeight) v.wrap.parentElement.scrollIntoView(scrollOptions('center'));
     }
     if (v.player && v.ready) { v.player.seekTo(sec || 0, true); v.player.playVideo(); return; }
     if (v.loading) { v.pending = sec; return; }
@@ -150,7 +152,7 @@
     videos[v.id] = v; if (!mainVideo) mainVideo = v;
     wrap.querySelector('.yt-facade').addEventListener('click', function () { startVideo(v, 0); });
     wrap.querySelector('[data-mini-close]').addEventListener('click', function () { v.miniOff = true; if (v.player && v.player.pauseVideo) v.player.pauseVideo(); updateMini(); });
-    wrap.querySelector('[data-mini-back]').addEventListener('click', function () { v.slot.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+    wrap.querySelector('[data-mini-back]').addEventListener('click', function () { v.slot.scrollIntoView(scrollOptions('center')); });
     new IntersectionObserver(function (en) { v.inView = en[0].isIntersecting; if (v.inView) v.miniOff = false; updateMini(); }, { threshold: 0.25 }).observe(v.slot);
   });
   function updateMini() {
@@ -189,7 +191,7 @@
     var body = document.createElement('div'); body.className = 'quote-body';
     while (bq.firstChild) body.appendChild(bq.firstChild);
     var head = document.createElement('div'); head.className = 'quote-head';
-    head.innerHTML = '<span>Цитата из видео</span>';
+    var label = document.createElement('span'); label.textContent = 'Цитата из видео'; head.appendChild(label);
     link.classList.add('quote-time'); link.setAttribute('aria-label', 'Смотреть с ' + link.textContent.trim());
     head.appendChild(link);
     bq.appendChild(head); bq.appendChild(body);
@@ -227,9 +229,8 @@
       var h = prose.querySelector('.block-heading[data-block="' + m[1] + '"]');
       var a = document.createElement(h ? 'a' : 'div');
       if (h) a.href = '#' + h.id;
-      a.innerHTML = '<span class="sm-num">Блок ' + m[1] + (m[2] ? '<span class="sm-time">' + m[2] + '</span>' : '') + '</span><span class="sm-title"></span>';
-      a.querySelector('.sm-title').textContent = m[3];
-      li.innerHTML = ''; li.appendChild(a);
+      var num = document.createElement('span'); num.className = 'sm-num'; num.textContent = 'Блок ' + m[1]; if (m[2]) { var time = document.createElement('span'); time.className = 'sm-time'; time.textContent = m[2]; num.appendChild(time); } var smTitle = document.createElement('span'); smTitle.className = 'sm-title'; smTitle.textContent = m[3]; a.appendChild(num); a.appendChild(smTitle);
+      li.replaceChildren(a);
     });
   });
 
@@ -245,8 +246,7 @@
         a.href = '#' + h.id;
         var num = h.querySelector('.block-num'), title = h.querySelector('.block-title');
         var text = (title ? title.textContent : h.textContent.replace(/#\s*$/, '')).trim();
-        a.innerHTML = (num ? '<span class="toc-num">' + num.textContent + '</span>' : '') + '<span class="toc-text"></span>';
-        a.querySelector('.toc-text').textContent = text;
+        if (num) { var tocNum = document.createElement('span'); tocNum.className = 'toc-num'; tocNum.textContent = num.textContent; a.appendChild(tocNum); } var tocText = document.createElement('span'); tocText.className = 'toc-text'; tocText.textContent = text; a.appendChild(tocText);
         a.dataset.target = h.id;
         li.appendChild(a);
         if (h.tagName === 'H2' || !curLi) { rootOl.appendChild(li); curLi = h.tagName === 'H2' ? li : null; curSub = null; }

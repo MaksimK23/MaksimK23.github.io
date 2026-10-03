@@ -1,4 +1,4 @@
-# Автоматическая публикация сайта на GitHub Pages при каждом изменении.
+# Автоматическая сборка и публикация сайта на GitHub Pages.
 name: Публикация сайта
 
 on:
@@ -7,54 +7,68 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
-  group: "pages"
+  group: "gh-pages-deploy"
   cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      HUGO_VERSION: 0.140.2
+      HUGO_VERSION: 0.167.0
     steps:
       - name: Установка Hugo
         run: |
-          wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
+          wget -q -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
+          echo "2d012c4490248195e2db07e89ce7f76af8bead93233e930bdf3733c53acd3b23  ${{ runner.temp }}/hugo.deb" | sha256sum -c -
           sudo dpkg -i ${{ runner.temp }}/hugo.deb
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
         with:
           node-version: 20
-      - name: Установка генератора картинок формул
+          cache: npm
+
+      - name: Установка генераторов
+        run: npm ci
+
+      - name: Проверка шрифтов
         run: |
-          npm install --no-audit --no-fund
           fc-list | grep -qi "DejaVu Serif" || (sudo apt-get update && sudo apt-get install -y fonts-dejavu-core)
-      - id: pages
-        uses: actions/configure-pages@v5
+
       - name: Сборка
         env:
           TZ: Europe/Berlin
-        run: hugo --gc --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
+        run: hugo --gc --minify --printPathWarnings --baseURL "https://maksimk23.github.io/"
+
       - name: Картинки формул для Telegram Instant View
-        run: node scripts/math-png.mjs public
+        run: npm run math -- public
+
       - name: Превью-картинки статей
         run: node scripts/og-images.mjs public
-      - name: Поисковый индекс
-        run: npx -y pagefind@1.3.0 --site public
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./public
 
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Поисковый индекс
+        run: npm run pagefind
+
+      - name: Проверка результата сборки
+        run: |
+          test -f public/index.html
+          test -f public/sitemap.xml
+          test -f public/index.xml
+          test -d public/pagefind
+          test -f public/favicon.svg
+
+      - name: Публикация production на gh-pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
+        with:
+          folder: public
+          branch: gh-pages
+          clean: true
+          clean-exclude: |
+            pr-preview/
+          force: false
+          commit-message: "deploy: production site"
