@@ -5,9 +5,14 @@
 
   // Тема
   var toggle = document.getElementById('theme-toggle');
+  function syncThemeState() {
+    if (toggle) toggle.setAttribute('aria-pressed', root.getAttribute('data-theme') === 'dark' ? 'true' : 'false');
+  }
+  syncThemeState();
   if (toggle) toggle.addEventListener('click', function () {
     var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     root.setAttribute('data-theme', next);
+    syncThemeState();
     try { localStorage.setItem('theme', next); } catch (e) {}
   });
 
@@ -84,7 +89,11 @@
     var cards = document.querySelectorAll('.list .card[data-tags]');
     box.addEventListener('click', function (e) {
       var b = e.target.closest('.chip'); if (!b) return;
-      box.querySelectorAll('.chip').forEach(function (c) { c.classList.toggle('is-active', c === b); });
+      box.querySelectorAll('.chip').forEach(function (c) {
+        var active = c === b;
+        c.classList.toggle('is-active', active);
+        c.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
       var f = b.dataset.filter;
       cards.forEach(function (c) { c.hidden = !!f && c.dataset.tags.split('|').indexOf(f) < 0; });
     });
@@ -261,12 +270,42 @@
     document.querySelectorAll('.toc-side, .toc-fab').forEach(function (el) { el.remove(); });
   }
   var sheet = document.querySelector('[data-toc-sheet]');
-  function closeSheet() { if (sheet) sheet.hidden = true; }
   var fab = document.querySelector('[data-toc-open]');
-  if (fab) fab.addEventListener('click', function () { sheet.hidden = false; var act = sheet.querySelector('a.is-active'); if (act) act.scrollIntoView({ block: 'center' }); });
+  var lastFocus = null;
+  function closeSheet() {
+    if (!sheet || sheet.hidden) return;
+    sheet.hidden = true;
+    if (fab) {
+      fab.setAttribute('aria-expanded', 'false');
+      if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+      else fab.focus();
+    }
+  }
+  function openSheet() {
+    if (!sheet || !fab) return;
+    lastFocus = document.activeElement;
+    sheet.hidden = false;
+    fab.setAttribute('aria-expanded', 'true');
+    var act = sheet.querySelector('a.is-active');
+    if (act) act.scrollIntoView({ block: 'center' });
+    var close = sheet.querySelector('[data-toc-close]');
+    if (close) close.focus();
+  }
+  if (fab) fab.addEventListener('click', openSheet);
   if (sheet) {
-    sheet.addEventListener('click', function (e) { if (e.target === sheet || e.target.closest('[data-toc-close]') || e.target.closest('a')) closeSheet(); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
+    sheet.addEventListener('click', function (e) {
+      if (e.target === sheet || e.target.closest('[data-toc-close]') || e.target.closest('a')) closeSheet();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (sheet.hidden) return;
+      if (e.key === 'Escape') { e.preventDefault(); closeSheet(); return; }
+      if (e.key !== 'Tab') return;
+      var focusable = sheet.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      if (!focusable.length) { e.preventDefault(); sheet.querySelector('.toc-sheet-panel').focus(); return; }
+      var first = focusable[0], last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
   }
 
   /* ═════════ Прогресс чтения, оставшееся время, активный раздел ═════════ */
@@ -295,6 +334,7 @@
       var on = active && a.dataset.target === active.id;
       if (on !== a.classList.contains('is-active')) {
         a.classList.toggle('is-active', on);
+        if (on) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current');
         if (on && a.closest('.toc-side')) { var box = a.closest('.toc-side-inner'), ar = a.getBoundingClientRect(), br = box.getBoundingClientRect(); if (ar.top < br.top + 40 || ar.bottom > br.bottom - 40) box.scrollTop += ar.top - br.top - br.height / 3; }
       }
       var li = a.parentElement;
