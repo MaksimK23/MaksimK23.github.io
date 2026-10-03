@@ -230,8 +230,7 @@
       var a = document.createElement(h ? 'a' : 'div');
       if (h) a.href = '#' + h.id;
       var num = document.createElement('span'); num.className = 'sm-num'; num.textContent = 'Блок ' + m[1]; if (m[2]) { var time = document.createElement('span'); time.className = 'sm-time'; time.textContent = m[2]; num.appendChild(time); } var smTitle = document.createElement('span'); smTitle.className = 'sm-title'; smTitle.textContent = m[3]; a.appendChild(num); a.appendChild(smTitle);
-      a.querySelector('.sm-title').textContent = m[3];
-      li.innerHTML = ''; li.appendChild(a);
+      li.replaceChildren(a);
     });
   });
 
@@ -247,8 +246,7 @@
         a.href = '#' + h.id;
         var num = h.querySelector('.block-num'), title = h.querySelector('.block-title');
         var text = (title ? title.textContent : h.textContent.replace(/#\s*$/, '')).trim();
-        if (num) { var tocNum = document.createElement('span'); tocNum.className = 'toc-num'; tocNum.textContent = num.textContent; a.appendChild(tocNum); } var tocText = document.createElement('span'); tocText.className = 'toc-text'; a.appendChild(tocText);
-        a.querySelector('.toc-text').textContent = text;
+        if (num) { var tocNum = document.createElement('span'); tocNum.className = 'toc-num'; tocNum.textContent = num.textContent; a.appendChild(tocNum); } var tocText = document.createElement('span'); tocText.className = 'toc-text'; tocText.textContent = text; a.appendChild(tocText);
         a.dataset.target = h.id;
         li.appendChild(a);
         if (h.tagName === 'H2' || !curLi) { rootOl.appendChild(li); curLi = h.tagName === 'H2' ? li : null; curSub = null; }
