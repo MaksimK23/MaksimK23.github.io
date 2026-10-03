@@ -41,9 +41,9 @@
     {{ $uniq := $all | uniq }}
     {{ if and (ge (len $rest) 3) (gt (len $uniq) 1) }}
     <div class="chips" role="group" aria-label="Фильтр по темам">
-      <button class="chip is-active" type="button" data-filter="">Все <span>{{ len $rest }}</span></button>
+      <button class="chip is-active" type="button" data-filter="" aria-pressed="true">Все <span>{{ len $rest }}</span></button>
       {{ range $uniq }}{{ $tag := . }}{{ $n := 0 }}{{ range $rest }}{{ range .GetTerms "tags" }}{{ if eq .LinkTitle $tag }}{{ $n = add $n 1 }}{{ end }}{{ end }}{{ end }}
-      <button class="chip" type="button" data-filter="{{ $tag }}">#{{ $tag }} <span>{{ $n }}</span></button>
+      <button class="chip" type="button" data-filter="{{ $tag }}" aria-pressed="false">#{{ $tag }} <span>{{ $n }}</span></button>
       {{ end }}
     </div>
     {{ end }}
