@@ -1,0 +1,89 @@
+# PR previews for GitHub Pages.
+name: Preview PR
+
+on:
+  pull_request:
+    branches: ["main"]
+    types: [opened, reopened, synchronize, closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: "preview-pr-${{ github.event.pull_request.number }}"
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    env:
+      HUGO_VERSION: 0.167.0
+      PREVIEW_BASE_URL: https://maksimk23.github.io/pr-preview/pr-${{ github.event.pull_request.number }}/
+    steps:
+      - name: Установка Hugo
+        run: |
+          wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
+          sudo dpkg -i ${{ runner.temp }}/hugo.deb
+
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Установка генераторов
+        run: npm ci
+
+      - name: Проверка шрифтов
+        run: |
+          fc-list | grep -qi "DejaVu Serif" || (sudo apt-get update && sudo apt-get install -y fonts-dejavu-core)
+
+      - name: Сборка preview
+        env:
+          TZ: Europe/Berlin
+        run: hugo --gc --minify --printPathWarnings --baseURL "${PREVIEW_BASE_URL}"
+
+      - name: Картинки формул для Telegram Instant View
+        run: npm run math -- public
+
+      - name: Превью-картинки статей
+        run: node scripts/og-images.mjs public
+
+      - name: Поисковый индекс
+        run: npx -y pagefind@1.3.0 --site public
+
+      - name: Проверка результата сборки
+        run: |
+          test -f public/index.html
+          test -f public/sitemap.xml
+          test -f public/index.xml
+          test -d public/pagefind
+          test -f public/favicon.svg
+
+      - name: Публикация preview
+        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9
+        with:
+          source-dir: public
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          action: auto
+          wait-for-pages-deployment: true
+          comment: true
+          qr-code: false
+
+  remove-preview:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Удаление preview
+        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9
+        with:
+          source-dir: public
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          action: remove
+          comment: true
+          qr-code: false
