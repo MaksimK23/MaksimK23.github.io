@@ -6,7 +6,8 @@
   "scripts": {
     "math": "node scripts/math-png.mjs",
     "og": "node scripts/og-images.mjs",
-    "pagefind": "pagefind --site public"
+    "pagefind": "pagefind --site public",
+    "check-site": "node scripts/check-site.mjs public"
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",

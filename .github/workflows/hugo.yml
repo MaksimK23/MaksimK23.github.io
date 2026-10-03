@@ -53,6 +53,9 @@ jobs:
       - name: Поисковый индекс
         run: npm run pagefind
 
+
+      - name: Проверка ссылок, якорей и изображений
+        run: npm run check-site
       - name: Проверка результата сборки
         run: |
           test -f public/index.html
