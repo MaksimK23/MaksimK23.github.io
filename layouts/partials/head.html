@@ -38,9 +38,10 @@
 {{ range .GetTerms "tags" }}<meta property="article:tag" content="{{ .LinkTitle }}">{{ end }}
 {{ end }}
 
-{{ $schema := dict "@context" "https://schema.org" "@type" (cond .IsPage "Article" "WebSite") "headline" .Title "name" .Title "description" $desc "url" .Permalink "image" ($img | absURL) "inLanguage" "ru-RU" }}
-{{ if .IsPage }}
-  {{ $schema = merge $schema (dict "datePublished" (.Date.Format "2006-01-02T15:04:05Z07:00") "author" (dict "@type" "Person" "name" site.Params.author)) }}
+{{ $isArticle := and .IsPage (eq .Section "articles") }}
+{{ $schema := dict "@context" "https://schema.org" "@type" (cond $isArticle "Article" "WebSite") "name" .Title "description" $desc "url" .Permalink "image" ($img | absURL) "inLanguage" "ru-RU" }}
+{{ if $isArticle }}
+  {{ $schema = merge $schema (dict "headline" .Title "datePublished" (.Date.Format "2006-01-02T15:04:05Z07:00") "dateModified" (.Lastmod.Format "2006-01-02T15:04:05Z07:00") "author" (dict "@type" "Person" "name" site.Params.author)) }}
 {{ else }}
   {{ $schema = merge $schema (dict "publisher" (dict "@type" "Person" "name" site.Params.author)) }}
 {{ end }}
