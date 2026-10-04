@@ -84,6 +84,11 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      - name: Подготовка gh-pages
+        uses: actions/checkout@v5
+        with:
+          ref: gh-pages
+
       - name: Загрузка preview artifact
         uses: actions/download-artifact@v5
         with:
@@ -108,6 +113,11 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      - name: Подготовка gh-pages
+        uses: actions/checkout@v5
+        with:
+          ref: gh-pages
+
       - name: Удаление preview
         uses: rossjrw/pr-preview-action@v1.8.1 # v1.8.1
         with:
