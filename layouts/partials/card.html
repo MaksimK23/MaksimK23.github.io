@@ -8,6 +8,6 @@
     {{ with $t.source }}<p class="card-source"><span>Разбор видео</span>{{ . }}</p>{{ end }}
   </div>
   <a class="card-thumb{{ if $t.video }} is-video{{ end }}" href="{{ .RelPermalink }}" tabindex="-1" aria-hidden="true">
-    <img src="{{ $t.src }}" alt="{{ .Params.image_alt | default (printf "Обложка статьи: %s" .Title) }}" loading="lazy" width="480" height="270">
+    <img src="{{ $t.src }}" alt="{{ .Params.image_alt | default (printf "Обложка статьи: %s" .Title) }}" loading="lazy" decoding="async" width="480" height="270">
   </a>
 </article>

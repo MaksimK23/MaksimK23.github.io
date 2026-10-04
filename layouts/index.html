@@ -17,7 +17,7 @@
 {{ $t := partial "thumb.html" $first }}
 <section class="wrap featured" aria-label="Новая статья">
   <a class="featured-media{{ if $t.video }} is-video{{ end }}" href="{{ $first.RelPermalink }}" tabindex="-1" aria-hidden="true">
-    <img src="{{ $t.src }}" alt="" width="960" height="540">
+    <img src="{{ $t.src }}" alt="" width="960" height="540" fetchpriority="high" decoding="async">
     <span class="featured-badge">Новое</span>
   </a>
   <div class="featured-body">
