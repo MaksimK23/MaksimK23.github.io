@@ -91,7 +91,7 @@ jobs:
           path: public
 
       - name: Публикация preview
-        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9
+        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c5c1acdf7a6de9
         with:
           source-dir: public
           preview-branch: gh-pages
@@ -109,7 +109,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Удаление preview
-        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9
+        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c5c1acdf7a6de9
         with:
           source-dir: public
           preview-branch: gh-pages
