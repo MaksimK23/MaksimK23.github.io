@@ -91,7 +91,7 @@ jobs:
           path: public
 
       - name: Публикация preview
-        uses: rossjrw/pr-preview-action@v1.8.1
+        uses: rossjrw/pr-preview-action@v1.8.1 # v1.8.1
         with:
           source-dir: public
           preview-branch: gh-pages
@@ -109,7 +109,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Удаление preview
-        uses: rossjrw/pr-preview-action@v1.8.1
+        uses: rossjrw/pr-preview-action@v1.8.1 # v1.8.1
         with:
           source-dir: public
           preview-branch: gh-pages
