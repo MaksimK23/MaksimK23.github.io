@@ -39,11 +39,11 @@
 {{ end }}
 
 {{ $isArticle := and .IsPage (eq .Section "articles") }}
-{{ $schema := dict "@context" "https://schema.org" "@type" (cond $isArticle "Article" "WebSite") "name" .Title "description" $desc "url" .Permalink "image" ($img | absURL) "inLanguage" "ru-RU" }}
+{{ $schema := dict "@context" "https://schema.org" "@type" (cond $isArticle "Article" "WebSite") "name" (cond $isArticle .Title site.Title) "description" $desc "url" .Permalink "image" ($img | absURL) "inLanguage" "ru-RU" }}
 {{ if $isArticle }}
-  {{ $schema = merge $schema (dict "headline" .Title "datePublished" (.Date.Format "2006-01-02T15:04:05Z07:00") "dateModified" (.Lastmod.Format "2006-01-02T15:04:05Z07:00") "author" (dict "@type" "Person" "name" site.Params.author)) }}
+  {{ $schema = merge $schema (dict "headline" .Title "datePublished" (.Date.Format "2006-01-02T15:04:05Z07:00") "dateModified" (.Lastmod.Format "2006-01-02T15:04:05Z07:00") "author" (dict "@type" "Organization" "name" site.Params.author)) }}
 {{ else }}
-  {{ $schema = merge $schema (dict "publisher" (dict "@type" "Person" "name" site.Params.author)) }}
+  {{ $schema = merge $schema (dict "publisher" (dict "@type" "Organization" "name" site.Params.author)) }}
 {{ end }}
 <script type="application/ld+json">{{ $schema | jsonify | safeHTML }}</script>
 
