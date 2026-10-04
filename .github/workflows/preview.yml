@@ -7,15 +7,14 @@ on:
     types: [opened, reopened, synchronize, closed]
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: "gh-pages-deploy"
   cancel-in-progress: false
 
 jobs:
-  deploy-preview:
+  build-preview:
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     env:
@@ -70,8 +69,34 @@ jobs:
           test -d public/pagefind
           test -f public/favicon.svg
 
+      - name: Сохранение preview artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-site
+          path: public
+          if-no-files-found: error
+
+  publish-preview:
+    if: github.event.action != 'closed'
+    needs: build-preview
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Подготовка gh-pages
+        uses: actions/checkout@v5
+        with:
+          ref: gh-pages
+
+      - name: Загрузка preview artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: preview-site
+          path: public
+
       - name: Публикация preview
-        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9
+        uses: rossjrw/pr-preview-action@v1.8.1 # v1.8.1
         with:
           source-dir: public
           preview-branch: gh-pages
@@ -84,9 +109,17 @@ jobs:
   remove-preview:
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
+      - name: Подготовка gh-pages
+        uses: actions/checkout@v5
+        with:
+          ref: gh-pages
+
       - name: Удаление preview
-        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9
+        uses: rossjrw/pr-preview-action@v1.8.1 # v1.8.1
         with:
           source-dir: public
           preview-branch: gh-pages
