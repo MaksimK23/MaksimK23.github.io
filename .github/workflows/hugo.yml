@@ -35,6 +35,9 @@ jobs:
       - name: Установка генераторов
         run: npm ci
 
+      - name: Проверка front matter и контента
+        run: npm run validate-content
+
       - name: Проверка шрифтов
         run: |
           fc-list | grep -qi "DejaVu Serif" || (sudo apt-get update && sudo apt-get install -y fonts-dejavu-core)
