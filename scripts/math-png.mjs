@@ -4,12 +4,7 @@
 // и подставляет реальные размеры картинок в HTML (метки MATHW<id> / MATHH<id>).
 import fs from 'node:fs';
 import path from 'node:path';
-import { mathjax } from 'mathjax-full/js/mathjax.js';
-import { TeX } from 'mathjax-full/js/input/tex.js';
-import { SVG } from 'mathjax-full/js/output/svg.js';
-import { liteAdaptor } from 'mathjax-full/js/adaptors/liteAdaptor.js';
-import { RegisterHTMLHandler } from 'mathjax-full/js/handlers/html.js';
-import { AllPackages } from 'mathjax-full/js/input/tex/AllPackages.js';
+import MathJax from 'mathjax';
 import { Resvg } from '@resvg/resvg-js';
 
 const OUT = process.argv[2] || 'public';
@@ -24,11 +19,10 @@ const WIDE_PX = 320;
 
 if (!fs.existsSync(MATH_DIR)) { console.log('Формул нет — пропускаю.'); process.exit(0); }
 
-const adaptor = liteAdaptor();
-RegisterHTMLHandler(adaptor);
-const doc = mathjax.document('', {
-  InputJax: new TeX({ packages: AllPackages.filter(p => p !== 'bussproofs') }),
-  OutputJax: new SVG({ fontCache: 'none' }),
+await MathJax.init({
+  loader: { load: ['input/tex', 'output/svg'] },
+  startup: { typeset: false },
+  svg: { fontCache: 'none' },
 });
 
 const sizes = {};
@@ -83,3 +77,4 @@ for (const f of walk(OUT)) {
   fs.writeFileSync(f, out); patched++;
 }
 console.log(`Формул: ${Object.keys(sizes).length}, страниц обновлено: ${patched}`);
+MathJax.done();
