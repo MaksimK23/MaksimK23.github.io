@@ -78,3 +78,5 @@ jobs:
             pr-preview/
           force: false
           commit-message: "deploy: production site"
+          git-config-name: "MaksimK23"
+          git-config-email: "215398146+MaksimK23@users.noreply.github.com"
