@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────
 #  Основные настройки сайта. Меняйте смело.
 # ─────────────────────────────────────────────
-baseURL = "https://maksimk23.github.io/"
+baseURL = "https://redboar.blog/"
 languageCode = "ru-RU"
 defaultContentLanguage = "ru"
 title = "Красный Кабан"

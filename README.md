@@ -2,7 +2,7 @@
 
 Статический сайт статей на Hugo с Markdown-контентом, собственными шаблонами и JavaScript. Публикация выполняется через GitHub Pages.
 
-Сайт: https://maksimk23.github.io/
+Сайт: https://redboar.blog/
 
 ## Что здесь есть
 
@@ -152,7 +152,7 @@ hugo server
 Для полного production-подобного build:
 
 ```bash
-hugo --gc --minify --printPathWarnings --baseURL "https://maksimk23.github.io/"
+hugo --gc --minify --printPathWarnings --baseURL "https://redboar.blog/"
 npm run math -- public
 node scripts/og-images.mjs public
 npm run pagefind
@@ -252,7 +252,7 @@ main.js
 Сейчас сайт работает на:
 
 ```text
-https://maksimk23.github.io/
+https://redboar.blog/
 ```
 
 Для custom domain его нужно указать в **Repository → Settings → Pages → Custom domain**, а DNS настроить у регистратора. GitHub рекомендует сначала верифицировать домен; для apex-домена используются A/AAAA либо ALIAS/ANAME, а для поддомена — CNAME. citeturn0search0turn0search4

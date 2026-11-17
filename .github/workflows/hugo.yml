@@ -45,7 +45,7 @@ jobs:
       - name: Сборка
         env:
           TZ: Europe/Berlin
-        run: hugo --gc --minify --printPathWarnings --baseURL "https://maksimk23.github.io/"
+        run: hugo --gc --minify --printPathWarnings --baseURL "https://redboar.blog/"
 
       - name: Картинки формул для Telegram Instant View
         run: npm run math -- public
@@ -66,6 +66,7 @@ jobs:
           test -f public/index.xml
           test -d public/pagefind
           test -f public/favicon.svg
+          test -f public/CNAME
 
       - name: Публикация production на gh-pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

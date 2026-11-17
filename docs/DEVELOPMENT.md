@@ -12,7 +12,7 @@ hugo server
 Для проверки production-подобной сборки:
 
 ```bash
-hugo --gc --minify --printPathWarnings --baseURL "https://maksimk23.github.io/"
+hugo --gc --minify --printPathWarnings --baseURL "https://redboar.blog/"
 npm run math -- public
 npm run og -- public
 npm run pagefind
