@@ -242,4 +242,206 @@ export function initArticle(prose, article) {
   addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
   addEventListener('resize', onScroll);
   onScroll();
+
+  /* ═════════ Сноски на литературу: всплывающее окно при наведении ═════════ */
+  var bibHead = Array.prototype.find.call(prose.querySelectorAll('h2, h3, h4'), function (h) {
+    return /Библиографический список|Список литературы/i.test(h.textContent);
+  });
+  var bibList = null;
+  if (bibHead) {
+    var sib = bibHead.nextElementSibling;
+    while (sib && !/^H[1-4]$/.test(sib.tagName)) {
+      if (sib.tagName === 'OL') { bibList = sib; break; }
+      sib = sib.nextElementSibling;
+    }
+  }
+  if (bibList) {
+    var refs = {};
+    var startNum = parseInt(bibList.getAttribute('start') || '1', 10);
+    bibList.classList.add('bib-list');
+    Array.prototype.forEach.call(bibList.querySelectorAll(':scope > li'), function (li, idx) {
+      var n = startNum + idx;
+      if (!li.id) li.id = 'ref-' + n;
+      refs[n] = { id: li.id, html: li.innerHTML.trim(), el: li };
+    });
+
+    var walker = document.createTreeWalker(prose, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        if (!node.nodeValue || node.nodeValue.indexOf('[') < 0) return NodeFilter.FILTER_REJECT;
+        var p = node.parentElement;
+        if (!p || p.closest('a, button, pre, code, .math, script, style, h1, h2, h3, h4, .structure-map, .quote-head, .bib-list')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+    var fnPattern = /\[(\d{1,3}(?:\s*,\s*\d{1,3})*)\]/g;
+    var fnLinks = [];
+    textNodes.forEach(function (node) {
+      var val = node.nodeValue;
+      fnPattern.lastIndex = 0;
+      var m, last = 0, frag = null;
+      while ((m = fnPattern.exec(val)) !== null) {
+        var nums = m[1].split(',').map(function (s) { return parseInt(s.trim(), 10); });
+        if (!nums.length || !nums.every(function (n) { return !!refs[n]; })) continue;
+        if (!frag) frag = document.createDocumentFragment();
+        if (m.index > last) frag.appendChild(document.createTextNode(val.slice(last, m.index)));
+        var a = document.createElement('a');
+        a.className = 'fn-ref';
+        a.href = '#' + refs[nums[0]].id;
+        a.dataset.fn = nums.join(',');
+        a.textContent = '[' + nums.join(', ') + ']';
+        frag.appendChild(a);
+        fnLinks.push(a);
+        last = m.index + m[0].length;
+      }
+      if (frag) {
+        if (last < val.length) frag.appendChild(document.createTextNode(val.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+      }
+    });
+
+    if (fnLinks.length) {
+      var pop = document.createElement('div');
+      pop.className = 'fn-pop';
+      pop.id = 'fn-pop';
+      pop.setAttribute('role', 'tooltip');
+      pop.hidden = true;
+      document.body.appendChild(pop);
+
+      var activeAnchor = null;
+      var hideTimer = null;
+      var targetTimer = null;
+      var touchQuery = window.matchMedia('(hover: none)');
+
+      function jumpToRef(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        closePop();
+        el.scrollIntoView(scrollOptions('center'));
+        bibList.querySelectorAll('li.is-target').forEach(function (li) { li.classList.remove('is-target'); });
+        el.classList.add('is-target');
+        clearTimeout(targetTimer);
+        targetTimer = setTimeout(function () { el.classList.remove('is-target'); }, 2200);
+      }
+
+      function positionPop(anchor) {
+        if (!anchor || pop.hidden) return;
+        var rect = anchor.getBoundingClientRect();
+        var pr = pop.getBoundingClientRect();
+        var vw = document.documentElement.clientWidth;
+        var vh = window.innerHeight;
+        var left = rect.left + rect.width / 2 - pr.width / 2;
+        left = Math.max(12, Math.min(vw - pr.width - 12, left));
+        var top = rect.top - pr.height - 8;
+        if (top < 68 && rect.bottom + 8 + pr.height <= vh - 12) {
+          top = rect.bottom + 8;
+        } else if (top < 68) {
+          top = rect.bottom + 8 <= vh - 80 ? rect.bottom + 8 : 68;
+        }
+        pop.style.left = Math.round(left) + 'px';
+        pop.style.top = Math.round(top) + 'px';
+      }
+
+      function openPop(anchor) {
+        clearTimeout(hideTimer);
+        if (activeAnchor && activeAnchor !== anchor) {
+          activeAnchor.classList.remove('is-open');
+          activeAnchor.removeAttribute('aria-describedby');
+        }
+        var nums = anchor.dataset.fn.split(',').map(function (s) { return parseInt(s, 10); });
+        pop.replaceChildren();
+        nums.forEach(function (n) {
+          var item = refs[n];
+          if (!item) return;
+          var card = document.createElement('div');
+          card.className = 'fn-pop-item';
+          var head = document.createElement('div');
+          head.className = 'fn-pop-head';
+          var title = document.createElement('span');
+          title.textContent = 'Источник [' + n + ']';
+          var jump = document.createElement('a');
+          jump.className = 'fn-pop-jump';
+          jump.href = '#' + item.id;
+          jump.textContent = 'К списку ↓';
+          jump.addEventListener('click', function (e) {
+            e.preventDefault();
+            jumpToRef(item.id);
+          });
+          head.appendChild(title);
+          head.appendChild(jump);
+          var body = document.createElement('div');
+          body.className = 'fn-pop-body';
+          body.innerHTML = item.html;
+          card.appendChild(head);
+          card.appendChild(body);
+          pop.appendChild(card);
+        });
+        activeAnchor = anchor;
+        anchor.classList.add('is-open');
+        anchor.setAttribute('aria-describedby', 'fn-pop');
+        pop.hidden = false;
+        pop.scrollTop = 0;
+        positionPop(anchor);
+      }
+
+      function closePop() {
+        clearTimeout(hideTimer);
+        if (activeAnchor) {
+          activeAnchor.classList.remove('is-open');
+          activeAnchor.removeAttribute('aria-describedby');
+          activeAnchor = null;
+        }
+        pop.hidden = true;
+      }
+
+      function scheduleHide() {
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(closePop, 160);
+      }
+
+      fnLinks.forEach(function (a) {
+        a.addEventListener('mouseenter', function () {
+          if (!touchQuery.matches) openPop(a);
+        });
+        a.addEventListener('mouseleave', function () {
+          if (!touchQuery.matches) scheduleHide();
+        });
+        a.addEventListener('focusin', function () { openPop(a); });
+        a.addEventListener('focusout', function () {
+          setTimeout(function () {
+            if (!pop.contains(document.activeElement) && document.activeElement !== a) scheduleHide();
+          }, 80);
+        });
+        a.addEventListener('click', function (e) {
+          e.preventDefault();
+          if (touchQuery.matches && activeAnchor !== a) {
+            openPop(a);
+            return;
+          }
+          jumpToRef(a.getAttribute('href').slice(1));
+        });
+      });
+
+      pop.addEventListener('mouseenter', function () { clearTimeout(hideTimer); });
+      pop.addEventListener('mouseleave', function () {
+        if (!touchQuery.matches) scheduleHide();
+      });
+      document.addEventListener('click', function (e) {
+        if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('.fn-ref')) closePop();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !pop.hidden) closePop();
+      });
+      addEventListener('scroll', function () {
+        if (!pop.hidden && activeAnchor) positionPop(activeAnchor);
+      }, { passive: true });
+      addEventListener('resize', function () {
+        if (!pop.hidden && activeAnchor) positionPop(activeAnchor);
+      });
+    }
+  }
 }
