@@ -25,9 +25,6 @@
     <h2 class="featured-title"><a href="{{ $first.RelPermalink }}">{{ $first.Title }}</a></h2>
     <p class="featured-desc">{{ or $first.Description $first.Summary | plainify | htmlUnescape | truncate 220 }}</p>
     {{ with $t.source }}<p class="card-source"><span>Разбор видео</span>{{ . }}</p>{{ end }}
-    {{ with $first.Params.key_points }}
-    <ul class="featured-points">{{ range first 2 . }}<li>{{ . | markdownify }}</li>{{ end }}</ul>
-    {{ end }}
     <a class="btn btn-primary featured-cta" href="{{ $first.RelPermalink }}">Читать · {{ $first.ReadingTime }} мин</a>
   </div>
 </section>

@@ -14,13 +14,6 @@
     <div data-pagefind-ignore>{{ partial "share.html" . }}</div>
   </header>
 
-  {{ with .Params.key_points }}
-  <section class="key-points" aria-label="Главное">
-    <p class="key-points-title">Главное</p>
-    <ol>{{ range . }}<li>{{ . | markdownify }}</li>{{ end }}</ol>
-  </section>
-  {{ end }}
-
   <div class="prose">
     {{ $content | safeHTML }}
   </div>

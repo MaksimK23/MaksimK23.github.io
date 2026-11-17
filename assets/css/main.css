@@ -254,13 +254,6 @@ img, svg, video { max-width: 100%; height: auto; }
 .toc-sheet .toc-list ol ol { display: none; }
 @keyframes sheet-in { from { transform: translateY(100%); } to { transform: none; } }
 
-/* ═════════ Главное ═════════ */
-.key-points { margin: 0 0 2.5rem; padding: 1.4rem 1.5rem 1.5rem; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--accent); border-radius: var(--radius); }
-.key-points-title { font: 600 var(--text-xs) var(--font-ui); text-transform: uppercase; letter-spacing: .12em; color: var(--accent); margin: 0 0 .75rem; }
-.key-points ol { margin: 0; padding: 0; list-style: none; counter-reset: kp; display: grid; gap: .8rem; }
-.key-points li { counter-increment: kp; display: grid; grid-template-columns: 1.75rem 1fr; gap: .5rem; line-height: 1.55; font-size: calc(var(--text-base) * var(--fs, 1) * .97); }
-.key-points li::before { content: counter(kp); font: 600 var(--text-sm)/1.9 var(--font-ui); color: var(--accent); font-variant-numeric: tabular-nums; }
-
 /* ═════════ Заголовки, якоря, блоки ═════════ */
 .prose h2, .prose h3 { position: relative; scroll-margin-top: 5rem; }
 .h-anchor { margin-left: .4rem; font: 500 .8em var(--font-ui); color: var(--faint); text-decoration: none; opacity: 0; transition: opacity .15s; }
@@ -400,9 +393,6 @@ button.block-time, .block-time.is-link { border: 0; cursor: pointer; font: inher
 .featured-title a { color: var(--text); text-decoration: none; }
 .featured-title a:hover { color: var(--accent); }
 .featured-desc { margin: 0 0 .75rem; color: var(--muted); line-height: 1.55; }
-.featured-points { list-style: none; margin: 0 0 1.25rem; padding: 0; display: grid; gap: .5rem; font-size: var(--text-sm); line-height: 1.5; }
-.featured-points li { position: relative; padding-left: 1.1rem; }
-.featured-points li::before { content: ""; position: absolute; left: 0; top: .6em; width: .45rem; height: .45rem; border-radius: 50%; background: var(--accent); }
 .featured-cta { margin-top: .25rem; }
 .card-source { margin: 0 0 .9rem; font: 400 var(--text-xs)/1.4 var(--font-ui); color: var(--faint); }
 .card-source span { display: inline-block; margin-right: .45rem; padding: .15rem .45rem; border-radius: 4px; background: var(--surface-2); color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: .9em; }
@@ -439,5 +429,4 @@ button.block-time, .block-time.is-link { border: 0; cursor: pointer; font: inher
   .home-about-link { white-space: nowrap; }
   .featured { gap: 1rem; }
   .featured-title { margin-top: .35rem; }
-  .featured-points { display: none; }
 }
