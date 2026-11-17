@@ -31,8 +31,8 @@ for (const file of fs.readdirSync(MATH_DIR).filter(f => f.endsWith('.json'))) {
   const { tex, display } = JSON.parse(fs.readFileSync(path.join(MATH_DIR, file), 'utf8'));
   const kind = display ? 'display' : 'inline';
   try {
-    const node = doc.convert(tex, { display });
-    let svg = adaptor.innerHTML(node);
+    const node = await MathJax.tex2svgPromise(tex, { display });
+    let svg = MathJax.startup.adaptor.innerHTML(node);
     const w = parseFloat(svg.match(/width="([\d.]+)ex"/)[1]);
     const h = parseFloat(svg.match(/height="([\d.]+)ex"/)[1]);
     const [vx, vy, vw, vh] = svg.match(/viewBox="([^"]+)"/)[1].split(/\s+/).map(Number);
