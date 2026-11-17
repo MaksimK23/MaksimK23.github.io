@@ -290,10 +290,17 @@ export function initArticle(prose, article) {
         if (!frag) frag = document.createDocumentFragment();
         if (m.index > last) frag.appendChild(document.createTextNode(val.slice(last, m.index)));
         var a = document.createElement('a');
+        a.id = 'fnref-' + (fnLinks.length + 1);
         a.className = 'fn-ref';
         a.href = '#' + refs[nums[0]].id;
         a.dataset.fn = nums.join(',');
         a.textContent = '[' + nums.join(', ') + ']';
+        nums.forEach(function (n) {
+          if (refs[n] && !refs[n].firstAnchor) {
+            refs[n].firstAnchor = a;
+            refs[n].currentAnchor = a;
+          }
+        });
         frag.appendChild(a);
         fnLinks.push(a);
         last = m.index + m[0].length;
@@ -315,17 +322,63 @@ export function initArticle(prose, article) {
       var activeAnchor = null;
       var hideTimer = null;
       var targetTimer = null;
+      var returnTimer = null;
       var touchQuery = window.matchMedia('(hover: none)');
 
-      function jumpToRef(id) {
+      function jumpBackToAnchor(anchor, fromPopstate) {
+        if (!anchor) return;
+        closePop();
+        clearTimeout(targetTimer);
+        bibList.querySelectorAll('li.is-target').forEach(function (li) { li.classList.remove('is-target'); });
+        if (!fromPopstate) {
+          history.replaceState(null, '', '#' + anchor.id);
+        }
+        anchor.scrollIntoView(scrollOptions('center'));
+        fnLinks.forEach(function (el) { el.classList.remove('is-returned'); });
+        anchor.classList.add('is-returned');
+        clearTimeout(returnTimer);
+        returnTimer = setTimeout(function () {
+          anchor.classList.remove('is-returned');
+        }, 2600);
+      }
+
+      Object.keys(refs).forEach(function (key) {
+        var item = refs[key];
+        if (!item.firstAnchor) return;
+        var backLink = document.createElement('a');
+        backLink.className = 'bib-back';
+        backLink.href = '#' + item.firstAnchor.id;
+        backLink.title = 'Вернуться к месту сноски в тексте';
+        backLink.textContent = '↩ К тексту';
+        backLink.addEventListener('click', function (e) {
+          e.preventDefault();
+          jumpBackToAnchor(item.currentAnchor || item.firstAnchor, false);
+        });
+        item.backEl = backLink;
+        var host = (item.el.lastElementChild && item.el.lastElementChild.tagName === 'P') ? item.el.lastElementChild : item.el;
+        host.appendChild(document.createTextNode(' '));
+        host.appendChild(backLink);
+      });
+
+      function jumpToRef(id, originAnchor) {
         var el = document.getElementById(id);
         if (!el) return;
         closePop();
+        if (originAnchor) {
+          originAnchor.dataset.fn.split(',').forEach(function (s) {
+            var item = refs[parseInt(s.trim(), 10)];
+            if (!item) return;
+            item.currentAnchor = originAnchor;
+            if (item.backEl) item.backEl.href = '#' + originAnchor.id;
+          });
+          history.replaceState({ fnOrigin: originAnchor.id }, '', '#' + originAnchor.id);
+          history.pushState({ fnOrigin: originAnchor.id, fnTarget: id }, '', '#' + id);
+        }
         el.scrollIntoView(scrollOptions('center'));
         bibList.querySelectorAll('li.is-target').forEach(function (li) { li.classList.remove('is-target'); });
         el.classList.add('is-target');
         clearTimeout(targetTimer);
-        targetTimer = setTimeout(function () { el.classList.remove('is-target'); }, 2200);
+        targetTimer = setTimeout(function () { el.classList.remove('is-target'); }, 8000);
       }
 
       function positionPop(anchor) {
@@ -369,7 +422,7 @@ export function initArticle(prose, article) {
           jump.textContent = 'К списку ↓';
           jump.addEventListener('click', function (e) {
             e.preventDefault();
-            jumpToRef(item.id);
+            jumpToRef(item.id, anchor);
           });
           head.appendChild(title);
           head.appendChild(jump);
@@ -422,7 +475,7 @@ export function initArticle(prose, article) {
             openPop(a);
             return;
           }
-          jumpToRef(a.getAttribute('href').slice(1));
+          jumpToRef(a.getAttribute('href').slice(1), a);
         });
       });
 
@@ -441,6 +494,12 @@ export function initArticle(prose, article) {
       }, { passive: true });
       addEventListener('resize', function () {
         if (!pop.hidden && activeAnchor) positionPop(activeAnchor);
+      });
+      addEventListener('popstate', function () {
+        if (location.hash && /^#fnref-\d+$/.test(location.hash)) {
+          var backEl = document.getElementById(location.hash.slice(1));
+          if (backEl) jumpBackToAnchor(backEl, true);
+        }
       });
     }
   }
