@@ -325,14 +325,25 @@ export function initArticle(prose, article) {
     var textNodes = [];
     while (walker.nextNode()) textNodes.push(walker.currentNode);
 
-    var fnPattern = /\[(\d{1,3}(?:\s*,\s*\d{1,3})*)\]/g;
+    var fnPart = '\\d{1,3}(?:\\s*,\\s*(?:\\d{1,3}|(?:с|гл|ч|т|п|pp?|s)\\.[^;\\]]*))?';
+    var fnPattern = new RegExp('\\[(' + fnPart + '(?:\\s*;\\s*' + fnPart + ')*)\\]', 'g');
     var fnLinks = [];
     textNodes.forEach(function (node) {
       var val = node.nodeValue;
       fnPattern.lastIndex = 0;
       var m, last = 0, frag = null;
       while ((m = fnPattern.exec(val)) !== null) {
-        var nums = m[1].split(',').map(function (s) { return parseInt(s.trim(), 10); });
+        var nums = [];
+        m[1].split(';').forEach(function (part) {
+          part = part.trim();
+          if (/^\d{1,3}(?:\s*,\s*\d{1,3})*$/.test(part)) {
+            part.split(',').forEach(function (s) { nums.push(parseInt(s.trim(), 10)); });
+          } else {
+            var head = part.match(/^(\d{1,3})\b/);
+            if (head) nums.push(parseInt(head[1], 10));
+          }
+        });
+        nums = nums.filter(function (n, i, arr) { return arr.indexOf(n) === i; });
         if (!nums.length || !nums.every(function (n) { return !!refs[n]; })) continue;
         if (!frag) frag = document.createDocumentFragment();
         if (m.index > last) frag.appendChild(document.createTextNode(val.slice(last, m.index)));
@@ -341,7 +352,7 @@ export function initArticle(prose, article) {
         a.className = 'fn-ref';
         a.href = '#' + refs[nums[0]].id;
         a.dataset.fn = nums.join(',');
-        a.textContent = '[' + nums.join(', ') + ']';
+        a.textContent = '[' + m[1] + ']';
         nums.forEach(function (n) {
           if (refs[n] && !refs[n].firstAnchor) {
             refs[n].firstAnchor = a;
