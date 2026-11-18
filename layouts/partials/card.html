@@ -4,7 +4,9 @@
   <div class="card-body">
     {{ partial "meta.html" . }}
     <h2 class="card-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
-    <p class="card-desc">{{ or .Description .Summary | plainify | htmlUnescape | truncate 180 }}</p>
+    {{- $desc := .Description | plainify | htmlUnescape -}}
+    {{- if not $desc -}}{{- $desc = .Summary | plainify | htmlUnescape | truncate 180 -}}{{- end -}}
+    <p class="card-desc">{{ $desc }}</p>
     {{ with $t.source }}<p class="card-source"><span>Разбор видео</span>{{ . }}</p>{{ end }}
   </div>
   <a class="card-thumb{{ if $t.video }} is-video{{ end }}" href="{{ .RelPermalink }}" tabindex="-1" aria-hidden="true">

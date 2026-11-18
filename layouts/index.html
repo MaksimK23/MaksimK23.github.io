@@ -23,7 +23,9 @@
   <div class="featured-body">
     {{ partial "meta.html" $first }}
     <h2 class="featured-title"><a href="{{ $first.RelPermalink }}">{{ $first.Title }}</a></h2>
-    <p class="featured-desc">{{ or $first.Description $first.Summary | plainify | htmlUnescape | truncate 220 }}</p>
+    {{- $fdesc := $first.Description | plainify | htmlUnescape -}}
+    {{- if not $fdesc -}}{{- $fdesc = $first.Summary | plainify | htmlUnescape | truncate 220 -}}{{- end -}}
+    <p class="featured-desc">{{ $fdesc }}</p>
     {{ with $t.source }}<p class="card-source"><span>Разбор видео</span>{{ . }}</p>{{ end }}
     <a class="btn btn-primary featured-cta" href="{{ $first.RelPermalink }}">Читать · {{ $first.ReadingTime }} мин</a>
   </div>
