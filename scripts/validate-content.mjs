@@ -112,14 +112,32 @@ for (const file of files) {
   const rawLines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
   let inCodeFence = false;
   let inStructureMap = false;
+  let inFrontMatter = rawLines[0]?.trim() === '---';
+  let prevNonEmptyWasHr = false;
   for (let i = 0; i < rawLines.length; i++) {
     const line = rawLines[i].trim();
     const lineNo = i + 1;
+    if (inFrontMatter) {
+      if (i > 0 && line === '---') {
+        inFrontMatter = false;
+      }
+      continue;
+    }
     if (/^(?:```|~~~)/.test(line)) {
       inCodeFence = !inCodeFence;
+      prevNonEmptyWasHr = false;
       continue;
     }
     if (inCodeFence) continue;
+
+    if (line === '---') {
+      if (prevNonEmptyWasHr) {
+        errors.push(`${rel}:${lineNo}: двойной разделитель "---" подряд. Оставьте один разделитель между блоками.`);
+      }
+      prevNonEmptyWasHr = true;
+    } else if (line !== '') {
+      prevNonEmptyWasHr = false;
+    }
 
     if (/^#{2,4}\s+Структурная карта/i.test(line)) {
       inStructureMap = true;
