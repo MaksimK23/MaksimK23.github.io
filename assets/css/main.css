@@ -282,6 +282,9 @@ button.block-time, .block-time.is-link { border: 0; cursor: pointer; font: inher
 .quote-time { text-transform: none; letter-spacing: 0; font-variant-numeric: tabular-nums; color: var(--accent); background: var(--accent-soft); border: 0; border-radius: 999px; padding: .3rem .6rem; font: 600 var(--text-xs) var(--font-ui); cursor: pointer; text-decoration: none; }
 .quote-time::before { content: "▶"; font-size: .7em; margin-right: .35rem; }
 .quote-time:hover { color: var(--surface); background: var(--accent); }
+.ts-link { display: inline-flex; align-items: center; gap: .3em; text-transform: none; letter-spacing: 0; font-variant-numeric: tabular-nums; color: var(--accent); background: var(--accent-soft); border: 0; border-radius: 999px; padding: .1em .5em; font: 600 .8em var(--font-ui); line-height: 1.35; cursor: pointer; vertical-align: baseline; }
+.ts-link::before { content: "▶"; font-size: .68em; }
+.ts-link:hover { color: var(--surface); background: var(--accent); }
 .quote-body { font-size: .95em; line-height: 1.65; }
 .quote-body > * + * { margin-top: .8em; }
 .quote-src.is-clamped .quote-body { max-height: 9.5em; overflow: hidden; -webkit-mask-image: linear-gradient(#000 55%, transparent); mask-image: linear-gradient(#000 55%, transparent); }

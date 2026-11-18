@@ -91,7 +91,7 @@ export function initArticle(prose, article) {
 
   /* ═════════ Цитаты из видео: карточки, таймкод, сворачивание ═════════ */
   prose.querySelectorAll('blockquote').forEach(function (bq) {
-    var link = Array.prototype.find.call(bq.querySelectorAll('a'), function (a) { return /^\d{1,2}:\d{2}(:\d{2})?$/.test(a.textContent.trim()); });
+    var link = Array.prototype.find.call(bq.querySelectorAll('a'), function (a) { return /^\d{1,2}:\d{2}(:\d{2})?(?:\s*[—–-]\s*\d{1,2}:\d{2}(:\d{2})?)?$/.test(a.textContent.trim()); });
     if (!link) return;
     bq.classList.add('quote-src');
     var prev = link.previousSibling, next = link.nextSibling;
@@ -124,6 +124,48 @@ export function initArticle(prose, article) {
     b.addEventListener('click', function () { startVideo(mainVideo, start, true); });
     el.replaceWith(b);
   });
+
+  /* ═════════ Временные отметки в тексте [MM:SS] / [HH:MM:SS — HH:MM:SS] → перемотка ═════════ */
+  if (mainVideo) {
+    var tsRe = /\[(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[—–-]\s*\d{1,2}:\d{2}(?::\d{2})?)?)\]/g;
+    var walker = document.createTreeWalker(prose, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        var p = node.parentElement;
+        if (!p || p.closest('a, button, code, pre, script, style, .block-heading, .block-time, .quote-head, .structure-map')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return tsRe.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+      }
+    });
+    var tsNodes = [];
+    while (walker.nextNode()) tsNodes.push(walker.currentNode);
+    tsNodes.forEach(function (node) {
+      tsRe.lastIndex = 0;
+      var text = node.nodeValue;
+      var frag = document.createDocumentFragment();
+      var last = 0;
+      var m;
+      while ((m = tsRe.exec(text)) !== null) {
+        if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+        var rangeText = m[1];
+        var startStr = rangeText.split(/[—–-]/)[0].trim();
+        var startSec = toSec(startStr);
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ts-link';
+        btn.textContent = rangeText;
+        btn.title = 'Смотреть этот фрагмент видео';
+        btn.setAttribute('aria-label', 'Смотреть с ' + startStr);
+        btn.addEventListener('click', (function (sec) {
+          return function () { startVideo(mainVideo, sec, true); };
+        })(startSec));
+        frag.appendChild(btn);
+        last = m.index + m[0].length;
+      }
+      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
 
   /* ═════════ Структурная карта: список «Блок N …» → ссылки на разделы ═════════ */
   prose.querySelectorAll('ol, ul').forEach(function (list) {
