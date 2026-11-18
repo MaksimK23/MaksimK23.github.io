@@ -143,6 +143,10 @@ for (const file of files) {
       errors.push(`${rel}:${lineNo}: обнаружена служебная строка диалога ("${line.slice(0, 60)}"). Удалите её перед публикацией.`);
     }
 
+    if (line.includes('$$') && line !== '$$' && !/^\$\$[^$]+\$\$$/.test(line)) {
+      errors.push(`${rel}:${lineNo}: внутристрочная формула в двойных долларах "$$...$$". Используйте одинарные "$...$" для формул в тексте.`);
+    }
+
     if (/^#{2,4}\s+Структурная карта/i.test(line)) {
       inStructureMap = true;
       continue;
