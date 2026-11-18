@@ -129,6 +129,24 @@ export function initArticle(prose, article) {
     el.replaceWith(b);
   });
 
+  /* ═════════ Структурная карта: список «Блок N …» → ссылки на разделы ═════════ */
+  prose.querySelectorAll('ol, ul').forEach(function (list) {
+    var items = list.querySelectorAll(':scope > li');
+    if (items.length < 3) return;
+    var ok = Array.prototype.every.call(items, function (li) { return /^\s*Блок\s+\d+/.test(li.textContent); });
+    if (!ok) return;
+    list.classList.add('structure-map');
+    items.forEach(function (li) {
+      var m = li.textContent.trim().match(/^Блок\s+(\d+)\s*(?:\[([^\]]+)\])?\s*[:.—-]?\s*(.*)$/);
+      if (!m) return;
+      var h = prose.querySelector('.block-heading[data-block="' + m[1] + '"]');
+      var a = document.createElement(h ? 'a' : 'div');
+      if (h) a.href = '#' + h.id;
+      var num = document.createElement('span'); num.className = 'sm-num'; num.textContent = 'Блок ' + m[1]; if (m[2]) { var time = document.createElement('span'); time.className = 'sm-time'; time.textContent = m[2]; num.appendChild(time); } var smTitle = document.createElement('span'); smTitle.className = 'sm-title'; smTitle.textContent = m[3]; a.appendChild(num); a.appendChild(smTitle);
+      li.replaceChildren(a);
+    });
+  });
+
   /* ═════════ Временные отметки в тексте [MM:SS] / [HH:MM:SS — HH:MM:SS] → перемотка ═════════ */
   if (mainVideo) {
     var tsRe = /\[(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[—–-]\s*\d{1,2}:\d{2}(?::\d{2})?)?)\]/g;
@@ -138,6 +156,7 @@ export function initArticle(prose, article) {
         if (!p || p.closest('a, button, code, pre, script, style, .block-heading, .block-time, .quote-head, .structure-map')) {
           return NodeFilter.FILTER_REJECT;
         }
+        tsRe.lastIndex = 0;
         return tsRe.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
       }
     });
@@ -170,24 +189,6 @@ export function initArticle(prose, article) {
       node.parentNode.replaceChild(frag, node);
     });
   }
-
-  /* ═════════ Структурная карта: список «Блок N …» → ссылки на разделы ═════════ */
-  prose.querySelectorAll('ol, ul').forEach(function (list) {
-    var items = list.querySelectorAll(':scope > li');
-    if (items.length < 3) return;
-    var ok = Array.prototype.every.call(items, function (li) { return /^\s*Блок\s+\d+/.test(li.textContent); });
-    if (!ok) return;
-    list.classList.add('structure-map');
-    items.forEach(function (li) {
-      var m = li.textContent.trim().match(/^Блок\s+(\d+)\s*(?:\[([^\]]+)\])?\s*[:.—-]?\s*(.*)$/);
-      if (!m) return;
-      var h = prose.querySelector('.block-heading[data-block="' + m[1] + '"]');
-      var a = document.createElement(h ? 'a' : 'div');
-      if (h) a.href = '#' + h.id;
-      var num = document.createElement('span'); num.className = 'sm-num'; num.textContent = 'Блок ' + m[1]; if (m[2]) { var time = document.createElement('span'); time.className = 'sm-time'; time.textContent = m[2]; num.appendChild(time); } var smTitle = document.createElement('span'); smTitle.className = 'sm-title'; smTitle.textContent = m[3]; a.appendChild(num); a.appendChild(smTitle);
-      li.replaceChildren(a);
-    });
-  });
 
   /* ═════════ Оглавление: боковое + шторка на телефоне ═════════ */
   var heads = Array.prototype.slice.call(prose.querySelectorAll('h2[id], h3[id]'));
