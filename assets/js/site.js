@@ -80,6 +80,23 @@ export function initSite() {
       cards.forEach(function (c) { c.hidden = !!f && c.dataset.tags.split('|').indexOf(f) < 0; });
     });
   });
+
+  // Откат превью YouTube: maxresdefault (1280x720) -> sddefault (640x480) -> hqdefault (480x360)
+  var ytFallbackOrder = ['maxresdefault.jpg', 'sddefault.jpg', 'hqdefault.jpg'];
+  document.querySelectorAll('img[src*="i.ytimg.com/vi/"]').forEach(function (img) {
+    function stepFallback() {
+      var src = img.getAttribute('src') || '';
+      var idx = ytFallbackOrder.findIndex(function (name) { return src.indexOf('/' + name) !== -1; });
+      if (idx >= 0 && idx < ytFallbackOrder.length - 1) {
+        img.src = src.replace('/' + ytFallbackOrder[idx], '/' + ytFallbackOrder[idx + 1]);
+      }
+    }
+    img.addEventListener('error', stepFallback);
+    img.addEventListener('load', function () {
+      if (img.naturalWidth > 0 && img.naturalWidth <= 120) stepFallback();
+    });
+    if (img.complete && img.naturalWidth <= 120) stepFallback();
+  });
 }
 
   var root = document.documentElement;

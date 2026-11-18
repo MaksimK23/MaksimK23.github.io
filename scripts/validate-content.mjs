@@ -107,6 +107,40 @@ for (const file of files) {
       seenTitles.set(title, rel);
     }
   }
+
+  // Проверка форматирования названий блоков в структурной карте и заголовках H2
+  const rawLines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+  let inCodeFence = false;
+  let inStructureMap = false;
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i].trim();
+    const lineNo = i + 1;
+    if (/^(?:```|~~~)/.test(line)) {
+      inCodeFence = !inCodeFence;
+      continue;
+    }
+    if (inCodeFence) continue;
+
+    if (/^#{2,4}\s+Структурная карта/i.test(line)) {
+      inStructureMap = true;
+      continue;
+    }
+    if (inStructureMap && (/^#{1,2}\s+/.test(line) || line === '---')) {
+      inStructureMap = false;
+    }
+
+    if (inStructureMap && /^\d+\.\s+/.test(line)) {
+      if (/\[Завершающий блок\]/i.test(line) || !/^\d+\.\s+Блок\s+\d+(?:\s+\[[^\]]+\])?:\s+\S/.test(line)) {
+        errors.push(`${rel}:${lineNo}: неверный формат пункта структурной карты ("${line}"). Ожидается "N. Блок N: Название" или "N. Блок N [координаты]: Название"`);
+      }
+    }
+
+    if (/^##\s+/.test(line) && (/\bБлок\b/i.test(line) || /\[Завершающий блок\]/i.test(line))) {
+      if (/\[Завершающий блок\]/i.test(line) || !/^##\s+Блок\s+\d+(?:\s+\[[^\]]+\])?:\s+\S/.test(line)) {
+        errors.push(`${rel}:${lineNo}: неверный формат заголовка блока ("${line}"). Ожидается "## Блок N: Название" или "## Блок N [координаты]: Название"`);
+      }
+    }
+  }
 }
 
 if (errors.length) {
