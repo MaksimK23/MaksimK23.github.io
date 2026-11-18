@@ -35,9 +35,13 @@ export function initArticle(prose, article) {
     return apiPromise;
   }
   function startVideo(v, sec, scroll) {
+    v.miniOff = false;
     if (scroll && !v.wrap.classList.contains('is-mini')) {
       var r = v.wrap.getBoundingClientRect();
       if (r.top < 60 || r.bottom > innerHeight) v.wrap.parentElement.scrollIntoView(scrollOptions('center'));
+    } else if (!v.inView) {
+      v.miniActive = true;
+      updateMini();
     }
     if (v.player && v.ready) { v.player.seekTo(sec || 0, true); v.player.playVideo(); return; }
     if (v.loading) { v.pending = sec; return; }
@@ -86,7 +90,7 @@ export function initArticle(prose, article) {
     var info = ytInfo(a.href);
     if (!info || !videos[info.id]) return;
     e.preventDefault();
-    startVideo(videos[info.id], info.t, true);
+    startVideo(videos[info.id], info.t, false);
   });
 
   /* ═════════ Цитаты из видео: карточки, таймкод, сворачивание ═════════ */
@@ -121,7 +125,7 @@ export function initArticle(prose, article) {
     var start = toSec(el.dataset.range.split(/[—–-]/)[0].trim());
     var b = document.createElement('button'); b.type = 'button'; b.className = 'block-time is-link'; b.textContent = el.textContent;
     b.title = 'Смотреть этот фрагмент видео';
-    b.addEventListener('click', function () { startVideo(mainVideo, start, true); });
+    b.addEventListener('click', function () { startVideo(mainVideo, start, false); });
     el.replaceWith(b);
   });
 
@@ -157,7 +161,7 @@ export function initArticle(prose, article) {
         btn.title = 'Смотреть этот фрагмент видео';
         btn.setAttribute('aria-label', 'Смотреть с ' + startStr);
         btn.addEventListener('click', (function (sec) {
-          return function () { startVideo(mainVideo, sec, true); };
+          return function () { startVideo(mainVideo, sec, false); };
         })(startSec));
         frag.appendChild(btn);
         last = m.index + m[0].length;
