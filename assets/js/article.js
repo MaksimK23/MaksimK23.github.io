@@ -217,33 +217,46 @@ export function initArticle(prose, article) {
   var sheet = document.querySelector('[data-toc-sheet]');
   var fab = document.querySelector('[data-toc-open]');
   var lastFocus = null;
-  function closeSheet() {
+  function closeSheet(skipFocus) {
     if (!sheet || sheet.hidden) return;
     sheet.hidden = true;
+    document.body.classList.remove('is-sheet-open');
     if (fab) {
       fab.setAttribute('aria-expanded', 'false');
-      if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
-      else fab.focus();
+      if (!skipFocus) {
+        if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus({ preventScroll: true });
+        else fab.focus({ preventScroll: true });
+      }
     }
   }
   function openSheet() {
     if (!sheet || !fab) return;
     lastFocus = document.activeElement;
     sheet.hidden = false;
+    document.body.classList.add('is-sheet-open');
     fab.setAttribute('aria-expanded', 'true');
-    var act = sheet.querySelector('a.is-active');
-    if (act) act.scrollIntoView({ block: 'center' });
+    var panel = sheet.querySelector('.toc-sheet-panel');
+    var act = sheet.querySelector('a.is-active') || sheet.querySelector('li.is-open > a');
+    if (panel && act) {
+      var head = sheet.querySelector('.toc-sheet-head');
+      var headH = head ? head.getBoundingClientRect().height : 0;
+      var pr = panel.getBoundingClientRect();
+      var ar = act.getBoundingClientRect();
+      var actOffset = panel.scrollTop + (ar.top - pr.top);
+      panel.scrollTop = Math.max(0, actOffset - headH - (panel.clientHeight - headH - ar.height) / 2);
+    }
     var close = sheet.querySelector('[data-toc-close]');
-    if (close) close.focus();
+    if (close) close.focus({ preventScroll: true });
   }
   if (fab) fab.addEventListener('click', openSheet);
   if (sheet) {
     sheet.addEventListener('click', function (e) {
-      if (e.target === sheet || e.target.closest('[data-toc-close]') || e.target.closest('a')) closeSheet();
+      if (e.target.closest('a')) closeSheet(true);
+      else if (e.target === sheet || e.target.closest('[data-toc-close]')) closeSheet(false);
     });
     document.addEventListener('keydown', function (e) {
       if (sheet.hidden) return;
-      if (e.key === 'Escape') { e.preventDefault(); closeSheet(); return; }
+      if (e.key === 'Escape') { e.preventDefault(); closeSheet(false); return; }
       if (e.key !== 'Tab') return;
       var focusable = sheet.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
       if (!focusable.length) { e.preventDefault(); sheet.querySelector('.toc-sheet-panel').focus(); return; }
@@ -261,6 +274,7 @@ export function initArticle(prose, article) {
   var ticking = false;
   function onScroll() {
     ticking = false;
+    if (sheet && !sheet.hidden && innerWidth >= 1300) closeSheet(true);
     var r = prose.getBoundingClientRect();
     var span = r.height - innerHeight * 0.6;
     var p = Math.min(1, Math.max(0, (-r.top + innerHeight * 0.2) / span));
@@ -269,7 +283,7 @@ export function initArticle(prose, article) {
     var txt = p >= 0.99 ? 'дочитано' : (p < 0.01 ? total + ' мин' : 'осталось ' + left + ' мин');
     var short = p >= 0.99 ? '✓' : left + ' мин';
     leftEls.forEach(function (el) { el.textContent = el.classList.contains('toc-fab-left') ? short : txt; });
-    if (fab) fab.classList.toggle('is-hidden', r.top > innerHeight * 0.5 || r.bottom < innerHeight * 0.8);
+    if (fab) fab.classList.toggle('is-hidden', r.bottom < innerHeight * 0.2);
     // активный раздел
     var active = null;
     for (var i = 0; i < heads.length; i++) { if (heads[i].getBoundingClientRect().top < 120) active = heads[i]; else break; }
