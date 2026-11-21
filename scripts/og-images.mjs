@@ -23,18 +23,35 @@ const C = { bg: '#f6f3ec', ink: '#1d211f', muted: '#5d645f', accent: '#a8261b', 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 function wrap(text, size, maxLines) {
-  const words = text.split(/\s+/), lines = [];
+  const words = String(text || '').trim().split(/\s+/).filter(Boolean), lines = [];
   let cur = '';
   for (const w of words) {
     const t = cur ? cur + ' ' + w : w;
-    if (serif.getAdvanceWidth(t, size) <= MAXW || !cur) cur = t;
-    else { lines.push(cur); cur = w; }
+    if (serif.getAdvanceWidth(t, size) <= MAXW) {
+      cur = t;
+      continue;
+    }
+    if (/^[А-Яа-яЁёA-Za-z0-9«"(]{3,}-[А-Яа-яЁёA-Za-z0-9»"),.:;!?-]{3,}$/.test(w)) {
+      const parts = w.match(/[^-]+-?/g);
+      for (let idx = 0; idx < parts.length; idx++) {
+        const part = parts[idx];
+        const next = idx === 0 ? (cur ? cur + ' ' + part : part) : cur + part;
+        if (serif.getAdvanceWidth(next, size) <= MAXW || !cur) cur = next;
+        else { lines.push(cur); cur = part; }
+      }
+      continue;
+    }
+    if (cur) { lines.push(cur); cur = w; }
+    else cur = w;
   }
   if (cur) lines.push(cur);
   if (lines.length > maxLines) {
     const cut = lines.slice(0, maxLines);
     let last = cut[maxLines - 1];
-    while (serif.getAdvanceWidth(last + '…', size) > MAXW) last = last.replace(/\s*\S+$/, '');
+    while (last && serif.getAdvanceWidth(last + '…', size) > MAXW) {
+      const next = last.replace(/\s*\S+$/, '');
+      last = next && next !== last ? next : last.slice(0, -1);
+    }
     cut[maxLines - 1] = last.replace(/[,:;.\s—-]+$/, '') + '…';
     return cut;
   }
@@ -46,7 +63,10 @@ for (const file of fs.readdirSync(DIR).filter(f => f.endsWith('.json'))) {
   const job = JSON.parse(fs.readFileSync(path.join(DIR, file), 'utf8'));
   // Подбираем размер заголовка, чтобы он поместился в 4 строки
   let size = 72, lines;
-  for (; size >= 46; size -= 2) { lines = wrap(job.title, size, 99); if (lines.length <= 4) break; }
+  for (; size >= 46; size -= 2) {
+    lines = wrap(job.title, size, 99);
+    if (lines.length <= 4 && lines.every(l => serif.getAdvanceWidth(l, size) <= MAXW)) break;
+  }
   lines = wrap(job.title, size, 4);
   const lh = Math.round(size * 1.12);
   const blockH = lines.length * lh;
