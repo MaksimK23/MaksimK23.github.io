@@ -414,11 +414,11 @@ button.block-time, .block-time.is-link { border: 0; cursor: pointer; font: inher
 .chip.is-active { background: var(--accent); border-color: var(--accent); color: var(--surface); }
 .chip.is-active span { color: inherit; opacity: .75; }
 .list-section .list { padding-bottom: 0; }
-.card { display: grid; grid-template-columns: 1fr 6.5rem; gap: 1rem; align-items: start; max-width: none; }
+.card { display: grid; grid-template-columns: 1fr 7.5rem; gap: 1rem; align-items: start; max-width: none; }
 .card[hidden] { display: none; }
 @media (min-width: 640px) { .card { grid-template-columns: 1fr 14rem; gap: 2rem; } }
 .card-thumb { position: relative; display: block; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; background: var(--surface-2); margin-top: .35rem; }
-@media (max-width: 639px) { .card-thumb { aspect-ratio: 1; } .card-title { font-size: var(--text-lg); } .card-desc { font-size: var(--text-sm); } }
+@media (max-width: 639px) { .card-title { font-size: var(--text-lg); } .card-desc { font-size: var(--text-sm); } }
 
 .about { padding: 0 0 4rem; }
 .about-inner { padding: 1.75rem; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--accent); max-width: none; }
