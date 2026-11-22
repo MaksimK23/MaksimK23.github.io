@@ -454,5 +454,6 @@ button.block-time, .block-time.is-link { border: 0; cursor: pointer; font: inher
 .bib-list li { scroll-margin-top: 6rem; padding: .2rem .45rem; margin-left: -.45rem; border-radius: 6px; transition: background-color .4s var(--ease); }
 .bib-list li.is-target { background: var(--accent-soft); }
 .bib-back { display: inline-block; margin-left: .4rem; padding: .12em .48em; border-radius: 5px; font: 600 .78em/1.2 var(--font-ui); color: var(--accent); background: var(--accent-soft); text-decoration: none; white-space: nowrap; vertical-align: baseline; transition: background-color .15s, color .15s; }
+.bib-back[hidden] { display: none; }
 .bib-back:hover, .bib-back:focus-visible, .bib-list li.is-target .bib-back { background: var(--accent); color: var(--surface); }
 @media print { .fn-pop, .bib-back { display: none !important; } }

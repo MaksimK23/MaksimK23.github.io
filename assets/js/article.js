@@ -397,11 +397,18 @@ export function initArticle(prose, article) {
       var returnTimer = null;
       var touchQuery = window.matchMedia('(hover: none)');
 
+      function hideAllBackLinks() {
+        Object.keys(refs).forEach(function (key) {
+          if (refs[key].backEl) refs[key].backEl.hidden = true;
+        });
+      }
+
       function jumpBackToAnchor(anchor, fromPopstate) {
         if (!anchor) return;
         closePop();
         clearTimeout(targetTimer);
         bibList.querySelectorAll('li.is-target').forEach(function (li) { li.classList.remove('is-target'); });
+        hideAllBackLinks();
         if (!fromPopstate) {
           history.replaceState(null, '', '#' + anchor.id);
         }
@@ -419,6 +426,7 @@ export function initArticle(prose, article) {
         if (!item.firstAnchor) return;
         var backLink = document.createElement('a');
         backLink.className = 'bib-back';
+        backLink.hidden = true;
         backLink.href = '#' + item.firstAnchor.id;
         backLink.title = 'Вернуться к месту сноски в тексте';
         backLink.textContent = '↩ К тексту';
@@ -436,12 +444,16 @@ export function initArticle(prose, article) {
         var el = document.getElementById(id);
         if (!el) return;
         closePop();
+        hideAllBackLinks();
         if (originAnchor) {
           originAnchor.dataset.fn.split(',').forEach(function (s) {
             var item = refs[parseInt(s.trim(), 10)];
             if (!item) return;
             item.currentAnchor = originAnchor;
-            if (item.backEl) item.backEl.href = '#' + originAnchor.id;
+            if (item.backEl) {
+              item.backEl.href = '#' + originAnchor.id;
+              if (item.id === id) item.backEl.hidden = false;
+            }
           });
           history.replaceState({ fnOrigin: originAnchor.id }, '', '#' + originAnchor.id);
           history.pushState({ fnOrigin: originAnchor.id, fnTarget: id }, '', '#' + id);
