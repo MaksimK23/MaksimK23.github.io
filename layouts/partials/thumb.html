@@ -5,6 +5,6 @@
 {{- end -}}
 {{- with findRESubmatch `<iframe[^>]*title="([^"]+)"` .RawContent 1 -}}{{- $source = index (index . 0) 1 -}}{{- end -}}
 {{- with .Params.source -}}{{- $source = . -}}{{- end -}}
-{{- with .Params.image -}}{{- $src = . | relURL -}}{{- $isVideo = false -}}{{- end -}}
+{{- with .Params.image -}}{{- $src = . | relURL -}}{{- end -}}
 {{- if not $src -}}{{- with .File -}}{{- $src = printf "og/%s.png" .ContentBaseName | relURL -}}{{- end -}}{{- end -}}
 {{- return (dict "src" $src "source" $source "video" $isVideo) -}}
