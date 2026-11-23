@@ -94,19 +94,60 @@ export function initArticle(prose, article) {
   });
 
   /* ═════════ Цитаты из видео: карточки, таймкод, сворачивание ═════════ */
+  var quoteTailRe = /\s*\[(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[—–-]\s*\d{1,2}:\d{2}(?::\d{2})?)?)\](\s*(?:\[\d+\])?\s*\.?\s*)$/;
   prose.querySelectorAll('blockquote').forEach(function (bq) {
     var link = Array.prototype.find.call(bq.querySelectorAll('a'), function (a) { return /^\d{1,2}:\d{2}(:\d{2})?(?:\s*[—–-]\s*\d{1,2}:\d{2}(:\d{2})?)?$/.test(a.textContent.trim()); });
-    if (!link) return;
+    var timeEl = null;
+    if (link) {
+      var prev = link.previousSibling, next = link.nextSibling;
+      if (prev && prev.nodeType === 3) prev.textContent = prev.textContent.replace(/\s*\[\s*$/, '');
+      if (next && next.nodeType === 3) next.textContent = next.textContent.replace(/^\s*\]/, '');
+      link.classList.add('quote-time');
+      link.setAttribute('aria-label', 'Смотреть с ' + link.textContent.trim());
+      timeEl = link;
+    } else {
+      var tw = document.createTreeWalker(bq, NodeFilter.SHOW_TEXT, {
+        acceptNode: function (n) {
+          if (n.parentElement && n.parentElement.closest('a, button, code, pre')) return NodeFilter.FILTER_REJECT;
+          return n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+        }
+      });
+      var lastText = null;
+      while (tw.nextNode()) lastText = tw.currentNode;
+      var m = lastText && lastText.nodeValue.match(quoteTailRe);
+      if (m) {
+        var rangeText = m[1];
+        var trailing = m[2] ? m[2].trim() : '';
+        if (trailing === '.') trailing = '';
+        lastText.nodeValue = lastText.nodeValue.slice(0, m.index) + (trailing ? ' ' + trailing : '');
+        if (mainVideo) {
+          var startStr = rangeText.split(/[—–-]/)[0].trim();
+          var startSec = toSec(startStr);
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'quote-time';
+          btn.textContent = rangeText;
+          btn.title = 'Смотреть этот фрагмент видео';
+          btn.setAttribute('aria-label', 'Смотреть с ' + startStr);
+          btn.addEventListener('click', (function (sec) {
+            return function () { startVideo(mainVideo, sec, false); };
+          })(startSec));
+          timeEl = btn;
+        } else {
+          var span = document.createElement('span');
+          span.className = 'quote-time';
+          span.textContent = rangeText;
+          timeEl = span;
+        }
+      }
+    }
+    if (!timeEl) return;
     bq.classList.add('quote-src');
-    var prev = link.previousSibling, next = link.nextSibling;
-    if (prev && prev.nodeType === 3) prev.textContent = prev.textContent.replace(/\s*\[\s*$/, '');
-    if (next && next.nodeType === 3) next.textContent = next.textContent.replace(/^\s*\]/, '');
     var body = document.createElement('div'); body.className = 'quote-body';
     while (bq.firstChild) body.appendChild(bq.firstChild);
     var head = document.createElement('div'); head.className = 'quote-head';
     var label = document.createElement('span'); label.textContent = 'Цитата из видео'; head.appendChild(label);
-    link.classList.add('quote-time'); link.setAttribute('aria-label', 'Смотреть с ' + link.textContent.trim());
-    head.appendChild(link);
+    head.appendChild(timeEl);
     bq.appendChild(head); bq.appendChild(body);
     if (body.textContent.length > 650) {
       bq.classList.add('is-clamped');
