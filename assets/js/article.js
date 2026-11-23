@@ -150,6 +150,26 @@ export function initArticle(prose, article) {
   /* ═════════ Временные отметки в тексте [MM:SS] / [HH:MM:SS — HH:MM:SS] → перемотка ═════════ */
   if (mainVideo) {
     var tsRe = /\[(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[—–-]\s*\d{1,2}:\d{2}(?::\d{2})?)?)\]/g;
+    var tsExactRe = /^\[(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[—–-]\s*\d{1,2}:\d{2}(?::\d{2})?)?)\]$/;
+    var makeTsBtn = function (rangeText) {
+      var startStr = rangeText.split(/[—–-]/)[0].trim();
+      var startSec = toSec(startStr);
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ts-link';
+      btn.textContent = rangeText;
+      btn.title = 'Смотреть этот фрагмент видео';
+      btn.setAttribute('aria-label', 'Смотреть с ' + startStr);
+      btn.addEventListener('click', (function (sec) {
+        return function () { startVideo(mainVideo, sec, false); };
+      })(startSec));
+      return btn;
+    };
+    prose.querySelectorAll('code').forEach(function (code) {
+      if (code.closest('pre, a, button, .block-heading, .block-time, .quote-head, .structure-map')) return;
+      var m = code.textContent.trim().match(tsExactRe);
+      if (m) code.replaceWith(makeTsBtn(m[1]));
+    });
     var walker = document.createTreeWalker(prose, NodeFilter.SHOW_TEXT, {
       acceptNode: function (node) {
         var p = node.parentElement;
@@ -170,19 +190,7 @@ export function initArticle(prose, article) {
       var m;
       while ((m = tsRe.exec(text)) !== null) {
         if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
-        var rangeText = m[1];
-        var startStr = rangeText.split(/[—–-]/)[0].trim();
-        var startSec = toSec(startStr);
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'ts-link';
-        btn.textContent = rangeText;
-        btn.title = 'Смотреть этот фрагмент видео';
-        btn.setAttribute('aria-label', 'Смотреть с ' + startStr);
-        btn.addEventListener('click', (function (sec) {
-          return function () { startVideo(mainVideo, sec, false); };
-        })(startSec));
-        frag.appendChild(btn);
+        frag.appendChild(makeTsBtn(m[1]));
         last = m.index + m[0].length;
       }
       if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
