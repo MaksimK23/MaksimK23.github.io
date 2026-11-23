@@ -138,7 +138,7 @@ img, svg, video { max-width: 100%; height: auto; }
 .prose > * + * { margin-top: 1.25em; }
 .prose p { margin-bottom: 0; text-wrap: pretty; }
 .prose > :first-child { margin-top: 0; }
-.prose h2, .prose h3, .prose h4 { font-family: var(--font-body); line-height: 1.25; letter-spacing: -.015em; font-weight: 600; hyphens: manual; text-wrap: balance; }
+.prose h2, .prose h3, .prose h4 { font-family: var(--font-body); line-height: 1.25; letter-spacing: -.015em; font-weight: 600; hyphens: manual; }
 .prose h2 { font-size: var(--text-xl); margin: 2.25em 0 0; }
 .prose h3 { font-size: var(--text-lg); margin: 1.9em 0 0; }
 .prose h4 { font-size: var(--text-base); margin: 1.6em 0 0; }
@@ -146,7 +146,7 @@ img, svg, video { max-width: 100%; height: auto; }
 .prose ul, .prose ol { padding-left: 1.4em; margin-bottom: 0; }
 .prose li + li { margin-top: .35em; }
 .prose li::marker { color: var(--faint); }
-.prose blockquote { margin-left: 0; padding: .1em 0 .1em 1.25em; border-left: 3px solid var(--accent); color: var(--muted); font-style: italic; }
+.prose blockquote { margin-inline: 0; padding: .1em 0 .1em 1.25em; border-left: 3px solid var(--accent); color: var(--muted); font-style: italic; }
 .prose hr { border: 0; height: 1px; background: var(--border); margin: 3em 0; }
 .prose mark { background: var(--mark); color: inherit; padding: 0 .15em; border-radius: 3px; }
 .prose img { display: block; border-radius: var(--radius); margin-inline: auto; }
