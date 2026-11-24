@@ -262,7 +262,7 @@ body.is-sheet-open { overflow: hidden; }
 .h-anchor { margin-left: .4rem; font: 500 .8em var(--font-ui); color: var(--faint); text-decoration: none; opacity: 0; transition: opacity .15s; }
 .prose h2:hover .h-anchor, .prose h3:hover .h-anchor, .h-anchor:focus-visible { opacity: 1; }
 @media (hover: none) { .h-anchor { opacity: .45; } }
-.block-heading { padding-top: 1.75rem; border-top: 1px solid var(--border); }
+.prose h2.block-heading { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
 .block-kicker { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .6rem; font: 600 var(--text-xs)/1 var(--font-ui); letter-spacing: .02em; }
 .block-num { color: var(--accent); text-transform: uppercase; letter-spacing: .12em; }
 .block-time { color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; padding: .3rem .55rem; border-radius: 999px; background: var(--surface-2); }
