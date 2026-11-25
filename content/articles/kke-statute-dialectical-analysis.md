@@ -8,13 +8,21 @@ slug: "kke-statute-dialectical-analysis"
 
 ### Обращение в редакцию
 
-Поводом для настоящего исследования послужило обращение читателя в редакцию с приложенным официальным текстом Устава Коммунистической партии Греции на русском языке ([StatuteRu.pdf](/docs/StatuteRu.pdf) — <a href="/docs/StatuteRu.pdf" download="StatuteRu.pdf">скачать PDF</a>):
+Поводом для настоящего исследования послужило обращение читателя в редакцию с приложенным официальным текстом Устава Коммунистической партии Греции на русском языке (<a href="/docs/StatuteRu.pdf" download="StatuteRu.pdf">скачать PDF</a>):
 
 > «Проанализируй устав партии.»
 
-<details style="margin: 1rem 0; border: 1px solid rgba(128, 128, 128, 0.3); border-radius: 8px; padding: 0.65rem 1rem;">
-  <summary style="cursor: pointer; font-weight: 600;">Читать приложенный документ прямо на сайте (StatuteRu.pdf, 560 КБ)</summary>
-  <iframe src="/docs/StatuteRu.pdf" title="Устав Коммунистической партии Греции (StatuteRu.pdf)" style="width: 100%; height: 640px; border: 0; margin-top: 0.75rem; border-radius: 4px;" loading="lazy"></iframe>
+<details class="doc-reader" data-pdf="/docs/StatuteRu.pdf">
+  <summary>Читать приложенный документ на сайте (PDF, 560 КБ)</summary>
+  <div class="doc-slot">
+    <div class="doc-wrap">
+      <div class="mini-bar">
+        <button type="button" class="mini-btn" data-doc-back>↑ К документу</button>
+        <button type="button" class="mini-btn" data-doc-close aria-label="Свернуть окно документа">✕</button>
+      </div>
+      <iframe data-src="/docs/StatuteRu.pdf" title="Устав Коммунистической партии Греции" loading="lazy"></iframe>
+    </div>
+  </div>
 </details>
 
 Организационное строение коммунистической партии напрямую отражает её классовую природу, понимание демократического централизма и готовность к революционной борьбе. Пошаговый разбор уставных норм представлен в следующей структурной карте исследования.

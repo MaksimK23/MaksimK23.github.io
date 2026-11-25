@@ -93,11 +93,68 @@ export function initArticle(prose, article) {
     startVideo(videos[info.id], info.t, false);
   });
 
-  /* ═════════ Цитаты из видео: карточки, таймкод, сворачивание ═════════ */
+  /* ═════════ Приложенный PDF-документ: переход по страницам и мини-окно ═════════ */
+  var mainDoc = null;
+  var docDetails = prose.querySelector('.doc-reader[data-pdf]');
+  if (docDetails) {
+    var docSlot = docDetails.querySelector('.doc-slot');
+    var docWrap = docDetails.querySelector('.doc-wrap');
+    var docIframe = docDetails.querySelector('iframe');
+    mainDoc = {
+      details: docDetails,
+      slot: docSlot,
+      wrap: docWrap,
+      iframe: docIframe,
+      url: docDetails.dataset.pdf,
+      inView: true,
+      miniOff: false,
+      loaded: false,
+      curPage: null
+    };
+    function updateDocMini() {
+      if (!mainDoc) return;
+      var showMini = mainDoc.details.open && mainDoc.loaded && !mainDoc.inView && !mainDoc.miniOff;
+      mainDoc.wrap.classList.toggle('is-mini', showMini);
+    }
+    function openDocPage(page) {
+      if (!mainDoc) return;
+      mainDoc.miniOff = false;
+      if (!mainDoc.details.open) mainDoc.details.open = true;
+      var targetUrl = mainDoc.url + (page ? '#page=' + page : '');
+      if (!mainDoc.loaded) {
+        mainDoc.iframe.src = targetUrl;
+        mainDoc.loaded = true;
+      } else if (page && mainDoc.curPage !== page) {
+        mainDoc.iframe.src = 'about:blank';
+        setTimeout(function () { mainDoc.iframe.src = targetUrl; }, 25);
+      } else if (!mainDoc.iframe.src) {
+        mainDoc.iframe.src = targetUrl;
+      }
+      if (page) mainDoc.curPage = page;
+      updateDocMini();
+    }
+    docDetails.addEventListener('toggle', function () {
+      if (docDetails.open && !mainDoc.loaded) openDocPage(1);
+      else updateDocMini();
+    });
+    var docClose = docDetails.querySelector('[data-doc-close]');
+    if (docClose) docClose.addEventListener('click', function () { mainDoc.miniOff = true; updateDocMini(); });
+    var docBack = docDetails.querySelector('[data-doc-back]');
+    if (docBack) docBack.addEventListener('click', function () { mainDoc.slot.scrollIntoView(scrollOptions('center')); });
+    new IntersectionObserver(function (en) {
+      mainDoc.inView = en[0].isIntersecting;
+      if (mainDoc.inView) mainDoc.miniOff = false;
+      updateDocMini();
+    }, { threshold: 0.15 }).observe(docSlot);
+  }
+
+  /* ═════════ Цитаты из видео и документов: карточки, таймкод/страница, сворачивание ═════════ */
   var quoteTailRe = /\s*\[(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[—–-]\s*\d{1,2}:\d{2}(?::\d{2})?)?)\](\s*(?:\[\d+\])?\s*\.?\s*)$/;
+  var quotePageRe = /\s*\[([Сс]тр\.?\s*(\d+)(?:\s*[—–-]\s*\d+)?)\](\s*(?:\[\d+\])?\s*\.?\s*)$/;
   prose.querySelectorAll('blockquote').forEach(function (bq) {
     var link = Array.prototype.find.call(bq.querySelectorAll('a'), function (a) { return /^\d{1,2}:\d{2}(:\d{2})?(?:\s*[—–-]\s*\d{1,2}:\d{2}(:\d{2})?)?$/.test(a.textContent.trim()); });
     var timeEl = null;
+    var quoteLabel = 'Цитата из видео';
     if (link) {
       var prev = link.previousSibling, next = link.nextSibling;
       if (prev && prev.nodeType === 3) prev.textContent = prev.textContent.replace(/\s*\[\s*$/, '');
@@ -115,6 +172,7 @@ export function initArticle(prose, article) {
       var lastText = null;
       while (tw.nextNode()) lastText = tw.currentNode;
       var m = lastText && lastText.nodeValue.match(quoteTailRe);
+      var pm = !m && lastText && lastText.nodeValue.match(quotePageRe);
       if (m) {
         var rangeText = m[1];
         var trailing = m[2] ? m[2].trim() : '';
@@ -139,6 +197,30 @@ export function initArticle(prose, article) {
           span.textContent = rangeText;
           timeEl = span;
         }
+      } else if (pm) {
+        quoteLabel = 'Цитата из документа';
+        var pageLabel = pm[1];
+        var pageNum = parseInt(pm[2], 10);
+        var pTrailing = pm[3] ? pm[3].trim() : '';
+        if (pTrailing === '.') pTrailing = '';
+        lastText.nodeValue = lastText.nodeValue.slice(0, pm.index) + (pTrailing ? ' ' + pTrailing : '');
+        if (mainDoc) {
+          var pBtn = document.createElement('button');
+          pBtn.type = 'button';
+          pBtn.className = 'quote-time quote-page';
+          pBtn.textContent = pageLabel;
+          pBtn.title = 'Открыть страницу ' + pageNum + ' документа';
+          pBtn.setAttribute('aria-label', 'Открыть страницу ' + pageNum);
+          pBtn.addEventListener('click', (function (pg) {
+            return function () { openDocPage(pg); };
+          })(pageNum));
+          timeEl = pBtn;
+        } else {
+          var pSpan = document.createElement('span');
+          pSpan.className = 'quote-time quote-page';
+          pSpan.textContent = pageLabel;
+          timeEl = pSpan;
+        }
       }
     }
     if (!timeEl) return;
@@ -146,7 +228,7 @@ export function initArticle(prose, article) {
     var body = document.createElement('div'); body.className = 'quote-body';
     while (bq.firstChild) body.appendChild(bq.firstChild);
     var head = document.createElement('div'); head.className = 'quote-head';
-    var label = document.createElement('span'); label.textContent = 'Цитата из видео'; head.appendChild(label);
+    var label = document.createElement('span'); label.textContent = quoteLabel; head.appendChild(label);
     head.appendChild(timeEl);
     bq.appendChild(head); bq.appendChild(body);
     if (body.textContent.length > 650) {
