@@ -403,7 +403,17 @@ export function initArticle(prose, article) {
       }
     });
     var docClose = docDetails.querySelector('[data-doc-close]');
-    if (docClose) docClose.addEventListener('click', function () { mainDoc.miniOff = true; updateDocMini(); });
+    if (docClose) {
+      var docTall = document.createElement('button');
+      docTall.type = 'button';
+      docTall.className = 'mini-btn';
+      docTall.textContent = '↕';
+      docTall.title = 'Развернуть / свернуть по высоте';
+      docTall.setAttribute('aria-label', 'Изменить высоту окна документа');
+      docTall.addEventListener('click', function () { mainDoc.wrap.classList.toggle('is-tall'); });
+      docClose.parentElement.insertBefore(docTall, docClose);
+      docClose.addEventListener('click', function () { mainDoc.miniOff = true; updateDocMini(); });
+    }
     var docBack = docDetails.querySelector('[data-doc-back]');
     if (docBack) docBack.addEventListener('click', function () { mainDoc.slot.scrollIntoView(scrollOptions('center')); });
     new IntersectionObserver(function (en) {
