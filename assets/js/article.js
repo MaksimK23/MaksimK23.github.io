@@ -95,6 +95,7 @@ export function initArticle(prose, article) {
 
   /* ═════════ Приложенный PDF-документ (PDF.js): переход к цитате, подсветка и мини-окно ═════════ */
   var mainDoc = null;
+  var openDocPage = null;
   var docDetails = prose.querySelector('.doc-reader[data-pdf]');
   if (docDetails) {
     var docSlot = docDetails.querySelector('.doc-slot');
@@ -367,7 +368,7 @@ export function initArticle(prose, article) {
       }
     }
 
-    function openDocPage(page, quoteText, fromQuote) {
+    openDocPage = function (page, quoteText, fromQuote) {
       if (!mainDoc) return;
       mainDoc.currentPage = page || 1;
       mainDoc.currentQuote = quoteText || '';
