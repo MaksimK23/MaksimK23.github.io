@@ -406,7 +406,7 @@ export function initArticle(prose, article) {
     if (docClose) {
       var docTall = document.createElement('button');
       docTall.type = 'button';
-      docTall.className = 'mini-btn';
+      docTall.className = 'mini-btn doc-tall';
       docTall.textContent = '↕';
       docTall.title = 'Развернуть / свернуть по высоте';
       docTall.setAttribute('aria-label', 'Изменить высоту окна документа');
