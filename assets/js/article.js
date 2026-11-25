@@ -106,12 +106,30 @@ export function initArticle(prose, article) {
     toolbar.className = 'doc-toolbar';
     var pageInfo = document.createElement('span');
     pageInfo.textContent = 'Загрузка документа…';
+    var zoomWrap = document.createElement('span');
+    zoomWrap.className = 'doc-zoom';
+    var zoomOut = document.createElement('button');
+    zoomOut.type = 'button';
+    zoomOut.textContent = '−';
+    zoomOut.title = 'Уменьшить масштаб';
+    var zoomVal = document.createElement('span');
+    zoomVal.className = 'doc-zoom-val';
+    zoomVal.textContent = '100%';
+    var zoomIn = document.createElement('button');
+    zoomIn.type = 'button';
+    zoomIn.textContent = '+';
+    zoomIn.title = 'Увеличить масштаб';
+    zoomWrap.appendChild(zoomOut);
+    zoomWrap.appendChild(zoomVal);
+    zoomWrap.appendChild(zoomIn);
     var openTab = document.createElement('a');
     openTab.href = docDetails.dataset.pdf;
     openTab.target = '_blank';
     openTab.rel = 'noopener';
-    openTab.textContent = 'Открыть полностью ↗';
+    openTab.textContent = 'PDF ↗';
+    openTab.title = 'Открыть полностью в новой вкладке';
     toolbar.appendChild(pageInfo);
+    toolbar.appendChild(zoomWrap);
     toolbar.appendChild(openTab);
 
     var pagesEl = document.createElement('div');
@@ -126,14 +144,29 @@ export function initArticle(prose, article) {
       wrap: docWrap,
       pagesEl: pagesEl,
       pageInfo: pageInfo,
+      zoomVal: zoomVal,
       url: docDetails.dataset.pdf,
       inView: false,
       miniOff: false,
       pdf: null,
       pageBoxes: [],
       rendered: {},
-      pdfPromise: null
+      pdfPromise: null,
+      zoom: 1,
+      userZoomed: false,
+      lastWidth: 0,
+      currentPage: 1,
+      currentQuote: ''
     };
+
+    function effectiveZoom() {
+      if (mainDoc.userZoomed) return mainDoc.zoom;
+      return mainDoc.wrap.classList.contains('is-mini') ? 1.35 : 1;
+    }
+
+    function updateZoomLabel() {
+      mainDoc.zoomVal.textContent = Math.round(effectiveZoom() * 100) + '%';
+    }
 
     function loadPdfJs() {
       if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
@@ -155,7 +188,7 @@ export function initArticle(prose, article) {
         return lib.getDocument(mainDoc.url).promise;
       }).then(function (pdf) {
         mainDoc.pdf = pdf;
-        mainDoc.pageInfo.textContent = 'Страниц: ' + pdf.numPages;
+        mainDoc.pageInfo.textContent = 'Стр. 1 / ' + pdf.numPages;
         mainDoc.pagesEl.innerHTML = '';
         var io = new IntersectionObserver(function (entries) {
           entries.forEach(function (en) {
@@ -182,14 +215,19 @@ export function initArticle(prose, article) {
     }
 
     function renderPdfPage(num) {
-      if (!mainDoc.pdf || mainDoc.rendered[num]) return mainDoc.rendered[num] || Promise.resolve();
-      mainDoc.rendered[num] = mainDoc.pdf.getPage(num).then(function (page) {
+      if (!mainDoc.pdf) return Promise.resolve();
+      var z = effectiveZoom();
+      var curW = mainDoc.pagesEl.clientWidth || 340;
+      if (mainDoc.rendered[num] && mainDoc.rendered[num].z === z && Math.abs(mainDoc.rendered[num].w - curW) < 24) {
+        return mainDoc.rendered[num].p;
+      }
+      var p = mainDoc.pdf.getPage(num).then(function (page) {
         var box = mainDoc.pageBoxes[num];
-        var availW = Math.max(280, (mainDoc.pagesEl.clientWidth || 380) - 24);
+        var availW = Math.max(240, (mainDoc.pagesEl.clientWidth || 340) - 20);
         var unscaled = page.getViewport({ scale: 1 });
-        var scale = availW / unscaled.width;
+        var scale = (availW / unscaled.width) * z;
         var viewport = page.getViewport({ scale: scale });
-        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        var dpr = Math.max(window.devicePixelRatio || 1, 2);
 
         box.style.width = viewport.width + 'px';
         box.style.height = viewport.height + 'px';
@@ -219,16 +257,53 @@ export function initArticle(prose, article) {
             sp.style.left = tx[4] + 'px';
             sp.style.top = (tx[5] - fontH) + 'px';
             sp.style.fontSize = fontH + 'px';
+            if (item.width > 0) sp.style.width = (item.width * scale) + 'px';
             textDiv.appendChild(sp);
           });
         });
         return Promise.all([renderTask, textTask]);
       });
-      return mainDoc.rendered[num];
+      mainDoc.rendered[num] = { z: z, w: curW, p: p };
+      return p;
     }
+
+    function rerenderCurrentView() {
+      if (!mainDoc || !mainDoc.pdf) return;
+      updateZoomLabel();
+      mainDoc.rendered = {};
+      var target = mainDoc.currentPage || 1;
+      renderPdfPage(target).then(function () {
+        if (mainDoc.currentQuote) highlightQuoteOnPage(target, mainDoc.currentQuote);
+        else scrollPagesTo(mainDoc.pageBoxes[target], null);
+      });
+    }
+
+    zoomIn.addEventListener('click', function () {
+      mainDoc.userZoomed = true;
+      mainDoc.zoom = Math.min(2.4, +(effectiveZoom() + 0.2).toFixed(2));
+      rerenderCurrentView();
+    });
+    zoomOut.addEventListener('click', function () {
+      mainDoc.userZoomed = true;
+      mainDoc.zoom = Math.max(0.8, +(effectiveZoom() - 0.2).toFixed(2));
+      rerenderCurrentView();
+    });
 
     function normStr(s) {
       return (s || '').toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9]+/g, '');
+    }
+
+    function scrollPagesTo(box, el) {
+      if (!box || !mainDoc.pagesEl) return;
+      var top = box.offsetTop - 8;
+      var left = 0;
+      if (el) {
+        var elTop = el.offsetTop;
+        var elLeft = el.offsetLeft;
+        top = box.offsetTop + elTop - Math.max(36, mainDoc.pagesEl.clientHeight * 0.35);
+        left = box.offsetLeft + elLeft - 24;
+      }
+      mainDoc.pagesEl.scrollTo({ top: Math.max(0, top), left: Math.max(0, left), behavior: 'auto' });
     }
 
     function highlightQuoteOnPage(num, quoteText) {
@@ -236,7 +311,7 @@ export function initArticle(prose, article) {
       if (!box) return;
       mainDoc.pagesEl.querySelectorAll('.doc-text span.is-hl').forEach(function (el) { el.classList.remove('is-hl'); });
       if (!quoteText) {
-        box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        scrollPagesTo(box, null);
         return;
       }
       var spans = Array.prototype.slice.call(box.querySelectorAll('.doc-text span'));
@@ -262,12 +337,11 @@ export function initArticle(prose, article) {
         if (idx !== -1) { hitIdx = idx; hitLen = needles[k].length; break; }
       }
       if (hitIdx === -1) {
-        box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        scrollPagesTo(box, null);
         return;
       }
       var fullNeedle = normStr(quoteText);
       var endIdx = hitIdx + Math.max(hitLen, Math.min(fullNeedle.length, joined.length - hitIdx));
-      // Verify how far the normalized quote matches continuously
       var matchedEnd = hitIdx + hitLen;
       while (matchedEnd < endIdx && matchedEnd - hitIdx < fullNeedle.length && joined[matchedEnd] === fullNeedle[matchedEnd - hitIdx]) {
         matchedEnd++;
@@ -279,30 +353,40 @@ export function initArticle(prose, article) {
           if (!firstHl) firstHl = entry.sp;
         }
       });
-      if (firstHl) firstHl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      else box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      scrollPagesTo(box, firstHl);
     }
 
     function updateDocMini() {
       if (!mainDoc) return;
       var showMini = mainDoc.details.open && !mainDoc.inView && !mainDoc.miniOff;
+      var wasMini = mainDoc.wrap.classList.contains('is-mini');
       mainDoc.wrap.classList.toggle('is-mini', showMini);
+      updateZoomLabel();
+      if (showMini !== wasMini && mainDoc.pdf) {
+        rerenderCurrentView();
+      }
     }
 
-    function openDocPage(page, quoteText) {
+    function openDocPage(page, quoteText, fromQuote) {
       if (!mainDoc) return;
+      mainDoc.currentPage = page || 1;
+      mainDoc.currentQuote = quoteText || '';
       mainDoc.miniOff = false;
       if (!mainDoc.details.open) mainDoc.details.open = true;
       var r = mainDoc.slot.getBoundingClientRect();
-      mainDoc.inView = r.bottom > 80 && r.top < innerHeight - 80;
+      mainDoc.inView = fromQuote
+        ? (r.height > 0 && r.top >= 40 && r.bottom <= innerHeight + 40)
+        : (r.height > 0 && r.bottom > 80 && r.top < innerHeight - 80);
       updateDocMini();
 
-      var p = page || 1;
+      var p = mainDoc.currentPage;
       ensurePdf().then(function (pdf) {
         var target = Math.max(1, Math.min(p, pdf.numPages));
+        mainDoc.currentPage = target;
         mainDoc.pageInfo.textContent = 'Стр. ' + target + ' / ' + pdf.numPages;
+        scrollPagesTo(mainDoc.pageBoxes[target], null);
         return renderPdfPage(target).then(function () {
-          highlightQuoteOnPage(target, quoteText);
+          highlightQuoteOnPage(target, mainDoc.currentQuote);
         });
       });
     }
@@ -310,8 +394,8 @@ export function initArticle(prose, article) {
     docDetails.addEventListener('toggle', function () {
       if (docDetails.open) {
         var r = mainDoc.slot.getBoundingClientRect();
-        mainDoc.inView = r.bottom > 80 && r.top < innerHeight - 80;
-        if (!mainDoc.pdfPromise) openDocPage(1, '');
+        mainDoc.inView = r.height > 0 && r.bottom > 80 && r.top < innerHeight - 80;
+        if (!mainDoc.pdfPromise) openDocPage(1, '', false);
         else updateDocMini();
       } else {
         updateDocMini();
@@ -326,7 +410,7 @@ export function initArticle(prose, article) {
       mainDoc.inView = en[0].isIntersecting;
       if (mainDoc.inView) mainDoc.miniOff = false;
       updateDocMini();
-    }, { threshold: 0.15 }).observe(docSlot);
+    }, { threshold: 0.5 }).observe(docSlot);
   }
 
   /* ═════════ Цитаты из видео и документов: карточки, таймкод/страница, сворачивание ═════════ */
@@ -394,7 +478,7 @@ export function initArticle(prose, article) {
           pBtn.title = 'Открыть страницу ' + pageNum + ' документа';
           pBtn.setAttribute('aria-label', 'Открыть страницу ' + pageNum);
           pBtn.addEventListener('click', (function (pg, qt) {
-            return function () { openDocPage(pg, qt); };
+            return function () { openDocPage(pg, qt, true); };
           })(pageNum, qRawText));
           timeEl = pBtn;
         } else {
