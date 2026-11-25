@@ -120,17 +120,11 @@ export function initArticle(prose, article) {
       if (!mainDoc) return;
       mainDoc.miniOff = false;
       if (!mainDoc.details.open) mainDoc.details.open = true;
-      var targetUrl = mainDoc.url + (page ? '#page=' + page : '');
-      if (!mainDoc.loaded) {
-        mainDoc.iframe.src = targetUrl;
-        mainDoc.loaded = true;
-      } else if (page && mainDoc.curPage !== page) {
-        mainDoc.iframe.src = 'about:blank';
-        setTimeout(function () { mainDoc.iframe.src = targetUrl; }, 25);
-      } else if (!mainDoc.iframe.src) {
-        mainDoc.iframe.src = targetUrl;
-      }
-      if (page) mainDoc.curPage = page;
+      var p = page || 1;
+      var targetUrl = mainDoc.url + '?p=' + p + '&t=' + Date.now() + '#page=' + p + '&view=FitH';
+      mainDoc.iframe.src = targetUrl;
+      mainDoc.loaded = true;
+      mainDoc.curPage = p;
       updateDocMini();
     }
     docDetails.addEventListener('toggle', function () {
