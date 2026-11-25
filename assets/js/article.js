@@ -93,49 +93,236 @@ export function initArticle(prose, article) {
     startVideo(videos[info.id], info.t, false);
   });
 
-  /* ═════════ Приложенный PDF-документ: переход по страницам и мини-окно ═════════ */
+  /* ═════════ Приложенный PDF-документ (PDF.js): переход к цитате, подсветка и мини-окно ═════════ */
   var mainDoc = null;
   var docDetails = prose.querySelector('.doc-reader[data-pdf]');
   if (docDetails) {
     var docSlot = docDetails.querySelector('.doc-slot');
     var docWrap = docDetails.querySelector('.doc-wrap');
-    var docIframe = docDetails.querySelector('iframe');
+    var oldFrame = docWrap.querySelector('iframe');
+    if (oldFrame) oldFrame.remove();
+
+    var toolbar = document.createElement('div');
+    toolbar.className = 'doc-toolbar';
+    var pageInfo = document.createElement('span');
+    pageInfo.textContent = 'Загрузка документа…';
+    var openTab = document.createElement('a');
+    openTab.href = docDetails.dataset.pdf;
+    openTab.target = '_blank';
+    openTab.rel = 'noopener';
+    openTab.textContent = 'Открыть полностью ↗';
+    toolbar.appendChild(pageInfo);
+    toolbar.appendChild(openTab);
+
+    var pagesEl = document.createElement('div');
+    pagesEl.className = 'doc-pages';
+    pagesEl.innerHTML = '<div class="doc-status">Загрузка PDF…</div>';
+    docWrap.appendChild(toolbar);
+    docWrap.appendChild(pagesEl);
+
     mainDoc = {
       details: docDetails,
       slot: docSlot,
       wrap: docWrap,
-      iframe: docIframe,
+      pagesEl: pagesEl,
+      pageInfo: pageInfo,
       url: docDetails.dataset.pdf,
-      inView: true,
+      inView: false,
       miniOff: false,
-      loaded: false,
-      curPage: null
+      pdf: null,
+      pageBoxes: [],
+      rendered: {},
+      pdfPromise: null
     };
+
+    function loadPdfJs() {
+      if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+      return new Promise(function (resolve, reject) {
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
+        s.onload = function () {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+          resolve(window.pdfjsLib);
+        };
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    function ensurePdf() {
+      if (mainDoc.pdfPromise) return mainDoc.pdfPromise;
+      mainDoc.pdfPromise = loadPdfJs().then(function (lib) {
+        return lib.getDocument(mainDoc.url).promise;
+      }).then(function (pdf) {
+        mainDoc.pdf = pdf;
+        mainDoc.pageInfo.textContent = 'Страниц: ' + pdf.numPages;
+        mainDoc.pagesEl.innerHTML = '';
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (en) {
+            if (en.isIntersecting) {
+              var n = +en.target.dataset.page;
+              renderPdfPage(n);
+            }
+          });
+        }, { root: mainDoc.pagesEl, rootMargin: '300px 0px' });
+
+        for (var i = 1; i <= pdf.numPages; i++) {
+          var box = document.createElement('div');
+          box.className = 'doc-page';
+          box.dataset.page = i;
+          box.style.width = '360px';
+          box.style.height = '500px';
+          mainDoc.pagesEl.appendChild(box);
+          mainDoc.pageBoxes[i] = box;
+          io.observe(box);
+        }
+        return pdf;
+      });
+      return mainDoc.pdfPromise;
+    }
+
+    function renderPdfPage(num) {
+      if (!mainDoc.pdf || mainDoc.rendered[num]) return mainDoc.rendered[num] || Promise.resolve();
+      mainDoc.rendered[num] = mainDoc.pdf.getPage(num).then(function (page) {
+        var box = mainDoc.pageBoxes[num];
+        var availW = Math.max(280, (mainDoc.pagesEl.clientWidth || 380) - 24);
+        var unscaled = page.getViewport({ scale: 1 });
+        var scale = availW / unscaled.width;
+        var viewport = page.getViewport({ scale: scale });
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        box.style.width = viewport.width + 'px';
+        box.style.height = viewport.height + 'px';
+
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.floor(viewport.width * dpr);
+        canvas.height = Math.floor(viewport.height * dpr);
+        canvas.style.width = viewport.width + 'px';
+        canvas.style.height = viewport.height + 'px';
+        var ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        var textDiv = document.createElement('div');
+        textDiv.className = 'doc-text';
+        box.innerHTML = '';
+        box.appendChild(canvas);
+        box.appendChild(textDiv);
+
+        var renderTask = page.render({ canvasContext: ctx, viewport: viewport }).promise;
+        var textTask = page.getTextContent().then(function (tc) {
+          tc.items.forEach(function (item) {
+            if (!item.str) return;
+            var tx = window.pdfjsLib.Util.transform(viewport.transform, item.transform);
+            var fontH = Math.hypot(tx[2], tx[3]) || 10;
+            var sp = document.createElement('span');
+            sp.textContent = item.str;
+            sp.style.left = tx[4] + 'px';
+            sp.style.top = (tx[5] - fontH) + 'px';
+            sp.style.fontSize = fontH + 'px';
+            textDiv.appendChild(sp);
+          });
+        });
+        return Promise.all([renderTask, textTask]);
+      });
+      return mainDoc.rendered[num];
+    }
+
+    function normStr(s) {
+      return (s || '').toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9]+/g, '');
+    }
+
+    function highlightQuoteOnPage(num, quoteText) {
+      var box = mainDoc.pageBoxes[num];
+      if (!box) return;
+      mainDoc.pagesEl.querySelectorAll('.doc-text span.is-hl').forEach(function (el) { el.classList.remove('is-hl'); });
+      if (!quoteText) {
+        box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+      var spans = Array.prototype.slice.call(box.querySelectorAll('.doc-text span'));
+      var joined = '';
+      var map = [];
+      spans.forEach(function (sp) {
+        var ns = normStr(sp.textContent);
+        if (!ns) return;
+        var start = joined.length;
+        joined += ns;
+        map.push({ sp: sp, start: start, end: joined.length });
+      });
+
+      var words = (quoteText || '').replace(/[«»"„“()[\]]/g, ' ').trim().split(/\s+/).filter(Boolean);
+      var needles = [];
+      for (var len = Math.min(8, words.length); len >= 3; len--) {
+        needles.push(normStr(words.slice(0, len).join(' ')));
+      }
+      var hitIdx = -1, hitLen = 0;
+      for (var k = 0; k < needles.length; k++) {
+        if (needles[k].length < 8) continue;
+        var idx = joined.indexOf(needles[k]);
+        if (idx !== -1) { hitIdx = idx; hitLen = needles[k].length; break; }
+      }
+      if (hitIdx === -1) {
+        box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+      var fullNeedle = normStr(quoteText);
+      var endIdx = hitIdx + Math.max(hitLen, Math.min(fullNeedle.length, joined.length - hitIdx));
+      // Verify how far the normalized quote matches continuously
+      var matchedEnd = hitIdx + hitLen;
+      while (matchedEnd < endIdx && matchedEnd - hitIdx < fullNeedle.length && joined[matchedEnd] === fullNeedle[matchedEnd - hitIdx]) {
+        matchedEnd++;
+      }
+      var firstHl = null;
+      map.forEach(function (entry) {
+        if (entry.end > hitIdx && entry.start < matchedEnd) {
+          entry.sp.classList.add('is-hl');
+          if (!firstHl) firstHl = entry.sp;
+        }
+      });
+      if (firstHl) firstHl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      else box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     function updateDocMini() {
       if (!mainDoc) return;
-      var showMini = mainDoc.details.open && mainDoc.loaded && !mainDoc.inView && !mainDoc.miniOff;
+      var showMini = mainDoc.details.open && !mainDoc.inView && !mainDoc.miniOff;
       mainDoc.wrap.classList.toggle('is-mini', showMini);
     }
-    function openDocPage(page) {
+
+    function openDocPage(page, quoteText) {
       if (!mainDoc) return;
       mainDoc.miniOff = false;
       if (!mainDoc.details.open) mainDoc.details.open = true;
-      var p = page || 1;
-      var targetUrl = mainDoc.url + '?p=' + p + '&t=' + Date.now() + '#page=' + p + '&view=FitH';
-      mainDoc.iframe.src = targetUrl;
-      mainDoc.loaded = true;
-      mainDoc.curPage = p;
+      var r = mainDoc.slot.getBoundingClientRect();
+      mainDoc.inView = r.bottom > 80 && r.top < innerHeight - 80;
       updateDocMini();
+
+      var p = page || 1;
+      ensurePdf().then(function (pdf) {
+        var target = Math.max(1, Math.min(p, pdf.numPages));
+        mainDoc.pageInfo.textContent = 'Стр. ' + target + ' / ' + pdf.numPages;
+        return renderPdfPage(target).then(function () {
+          highlightQuoteOnPage(target, quoteText);
+        });
+      });
     }
+
     docDetails.addEventListener('toggle', function () {
-      if (docDetails.open && !mainDoc.loaded) openDocPage(1);
-      else updateDocMini();
+      if (docDetails.open) {
+        var r = mainDoc.slot.getBoundingClientRect();
+        mainDoc.inView = r.bottom > 80 && r.top < innerHeight - 80;
+        if (!mainDoc.pdfPromise) openDocPage(1, '');
+        else updateDocMini();
+      } else {
+        updateDocMini();
+      }
     });
     var docClose = docDetails.querySelector('[data-doc-close]');
     if (docClose) docClose.addEventListener('click', function () { mainDoc.miniOff = true; updateDocMini(); });
     var docBack = docDetails.querySelector('[data-doc-back]');
     if (docBack) docBack.addEventListener('click', function () { mainDoc.slot.scrollIntoView(scrollOptions('center')); });
     new IntersectionObserver(function (en) {
+      if (!mainDoc.details.open) { mainDoc.inView = false; updateDocMini(); return; }
       mainDoc.inView = en[0].isIntersecting;
       if (mainDoc.inView) mainDoc.miniOff = false;
       updateDocMini();
@@ -199,15 +386,16 @@ export function initArticle(prose, article) {
         if (pTrailing === '.') pTrailing = '';
         lastText.nodeValue = lastText.nodeValue.slice(0, pm.index) + (pTrailing ? ' ' + pTrailing : '');
         if (mainDoc) {
+          var qRawText = bq.textContent || '';
           var pBtn = document.createElement('button');
           pBtn.type = 'button';
           pBtn.className = 'quote-time quote-page';
           pBtn.textContent = pageLabel;
           pBtn.title = 'Открыть страницу ' + pageNum + ' документа';
           pBtn.setAttribute('aria-label', 'Открыть страницу ' + pageNum);
-          pBtn.addEventListener('click', (function (pg) {
-            return function () { openDocPage(pg); };
-          })(pageNum));
+          pBtn.addEventListener('click', (function (pg, qt) {
+            return function () { openDocPage(pg, qt); };
+          })(pageNum, qRawText));
           timeEl = pBtn;
         } else {
           var pSpan = document.createElement('span');
