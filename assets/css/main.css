@@ -207,7 +207,8 @@ img, svg, video { max-width: 100%; height: auto; }
 [data-fs="-1"] { --fs: .92; }
 [data-fs="1"]  { --fs: 1.08; }
 [data-fs="2"]  { --fs: 1.18; }
-.fs-ctrl { display: flex; gap: 0; margin-left: .25rem; padding-left: .35rem; border-left: 1px solid var(--border); }
+.fs-ctrl { display: flex; align-items: center; gap: 0; margin-left: .25rem; }
+.fs-ctrl::before { content: ""; width: 1px; height: 1.1rem; background: var(--border); margin-right: .35rem; }
 .fs-btn { font: 600 var(--text-sm)/1 var(--font-body); width: 2rem; }
 .fs-btn sup { font: 600 .65em var(--font-ui); margin-left: 1px; }
 .nav-search { display: grid !important; place-items: center; width: 2.25rem; height: 2.25rem; padding: 0 !important; }
@@ -354,8 +355,8 @@ button.block-time, .block-time.is-link { border: 0; cursor: pointer; font: inher
 
 /* ── правки ── */
 .prose hr:has(+ .block-heading) { display: none; }
-.fs-btn { display: inline-flex; align-items: baseline; justify-content: center; padding-top: .35rem; }
-.fs-btn sup { vertical-align: baseline; position: relative; top: -.35em; }
+.fs-btn { display: inline-flex; align-items: center; justify-content: center; padding-top: 0; }
+.fs-btn sup { vertical-align: baseline; position: relative; top: -.35em; line-height: 0; }
 .structure-map a { grid-template-columns: 9.5rem 1fr; }
 .structure-map .sm-time { white-space: normal; line-height: 1.35; }
 .toc-fab, .toc-fab span { white-space: nowrap; }
