@@ -147,6 +147,14 @@ for (const file of files) {
       errors.push(`${rel}:${lineNo}: внутристрочная формула в двойных долларах "$$...$$". Используйте одинарные "$...$" для формул в тексте.`);
     }
 
+    const lineNoCode = line.replace(/`[^`]*`/g, '');
+    for (const m of lineNoCode.matchAll(/(?<!\\)\$(?!\$)([^$]+?)(?<!\\)\$/g)) {
+      const stripped = m[1].replace(/\\(?:text|mathrm|operatorname|mathbf|textit)\{[^}]*\}/g, '');
+      if (/[А-Яа-яЁё]/.test(stripped)) {
+        errors.push(`${rel}:${lineNo}: кириллица в математическом режиме KaTeX ("${m[0]}"). Оберните кириллические символы в \\text{...}.`);
+      }
+    }
+
     if (/^#{2,4}\s+Структурная карта/i.test(line)) {
       inStructureMap = true;
       continue;
