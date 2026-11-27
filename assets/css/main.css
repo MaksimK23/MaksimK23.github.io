@@ -326,7 +326,11 @@ button.block-time, .block-time.is-link { border: 0; cursor: pointer; font: inher
 .video-wrap.is-mini .mini-bar { display: flex; position: absolute; left: 0; right: 0; bottom: 100%; justify-content: space-between; padding-bottom: .35rem; }
 .mini-btn { border: 0; border-radius: 6px; padding: .3rem .6rem; background: var(--text); color: var(--bg); font: 500 var(--text-xs) var(--font-ui); cursor: pointer; }
 @keyframes mini-in { from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: none; } }
-@media (max-width: 700px) { .video-wrap.is-mini { width: 13rem; right: .75rem; bottom: 4.5rem; } }
+@media (max-width: 700px) {
+  .video-wrap.is-mini { inset: auto .5rem .5rem .5rem; width: auto; height: auto; aspect-ratio: 16 / 9; z-index: 29; border-radius: 14px; }
+  .video-wrap.is-mini iframe { border-radius: 14px; }
+  .video-wrap.is-mini .mini-bar { padding: 0 .25rem .35rem; }
+}
 
 /* ═════════ Низ статьи: канал, похожие, комментарии ═════════ */
 .section-label { font: 600 var(--text-xs) var(--font-ui); text-transform: uppercase; letter-spacing: .12em; color: var(--faint); margin: 0 0 1rem; }
@@ -399,6 +403,7 @@ button.block-time, .block-time.is-link { border: 0; cursor: pointer; font: inher
   .doc-wrap.is-mini .mini-bar { padding: 0 .25rem .35rem; }
 }
 .quote-page::before { content: "📄"; font-size: .78em; margin-right: .35rem; }
+.ts-link.quote-page::before { content: "📄"; font-size: .82em; margin-right: 0; }
 .search-wrap .pagefind-ui__search-clear { background: transparent; color: var(--muted); font: 500 var(--text-xs) var(--font-ui); border: 0; padding: 0 1rem; height: calc(100% - 2px); top: 1px; right: 1px; border-radius: 0 10px 10px 0; }
 .search-wrap .pagefind-ui__search-clear:hover { color: var(--accent); }
 .search-wrap .pagefind-ui__search-input { font-weight: 500; }

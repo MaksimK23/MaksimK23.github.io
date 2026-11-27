@@ -51,10 +51,12 @@ export function initArticle(prose, article) {
     v.iframe.setAttribute('allow', (v.iframe.getAttribute('allow') || '') + '; autoplay');
     v.wrap.classList.add('is-loaded');
     loadApi().then(function () {
-      v.player = new window.YT.Player(v.iframe, { events: {
-        onReady: function () { v.ready = true; if (v.pending != null) { v.player.seekTo(v.pending, true); v.player.playVideo(); v.pending = null; } },
-        onStateChange: function (e) { v.playing = e.data === 1; v.ended = e.data === 0; if (v.playing && !v.inView && !v.miniOff) v.miniActive = true; if (v.ended) v.miniActive = false; updateMini(); }
-      } });
+      v.player = new window.YT.Player(v.iframe, {
+        events: {
+          onReady: function () { v.ready = true; if (v.pending != null) { v.player.seekTo(v.pending, true); v.player.playVideo(); v.pending = null; } },
+          onStateChange: function (e) { v.playing = e.data === 1; v.ended = e.data === 0; if (v.playing && !v.inView && !v.miniOff) v.miniActive = true; if (v.ended) v.miniActive = false; updateMini(); }
+        }
+      });
     });
   }
   var mainVideo = null;
@@ -598,6 +600,50 @@ export function initArticle(prose, article) {
     });
   }
 
+  /* ═════════ Сноски на страницы документа в тексте [Стр. N] → переход и подсветка ═════════ */
+  if (mainDoc) {
+    var pgRe = /\[([Сс]тр\.?\s*(\d+)(?:\s*[—–-]\s*\d+)?)\]/g;
+    var pgWalker = document.createTreeWalker(prose, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        var p = node.parentElement;
+        if (!p || p.closest('a, button, code, pre, script, style, .block-heading, .block-time, .quote-head, .structure-map, .doc-reader')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        pgRe.lastIndex = 0;
+        return pgRe.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+      }
+    });
+    var pgNodes = [];
+    while (pgWalker.nextNode()) pgNodes.push(pgWalker.currentNode);
+    pgNodes.forEach(function (node) {
+      pgRe.lastIndex = 0;
+      var text = node.nodeValue;
+      var frag = document.createDocumentFragment();
+      var last = 0;
+      var m;
+      while ((m = pgRe.exec(text)) !== null) {
+        if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+        var before = text.slice(0, m.index);
+        var qm = before.match(/«([^»]{12,})»\s*$/);
+        var qSnippet = qm ? qm[1] : '';
+        var pNum = parseInt(m[2], 10);
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ts-link quote-page';
+        btn.textContent = m[1];
+        btn.title = 'Открыть страницу ' + pNum + ' документа';
+        btn.setAttribute('aria-label', 'Открыть страницу ' + pNum);
+        btn.addEventListener('click', (function (pg, qt) {
+          return function () { openDocPage(pg, qt, true); };
+        })(pNum, qSnippet));
+        frag.appendChild(btn);
+        last = m.index + m[0].length;
+      }
+      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
   /* ═════════ Оглавление: боковое + шторка на телефоне ═════════ */
   var heads = Array.prototype.slice.call(prose.querySelectorAll('h2[id], h3[id]'));
   var tocNodes = document.querySelectorAll('[data-toc]');
@@ -677,7 +723,7 @@ export function initArticle(prose, article) {
   /* ═════════ Прогресс чтения, оставшееся время, активный раздел ═════════ */
   var bar = document.querySelector('.progress span');
   var leftEls = document.querySelectorAll('[data-time-left]');
-  var data = {}; try { data = JSON.parse(document.getElementById('article-data').textContent); } catch (e) {}
+  var data = {}; try { data = JSON.parse(document.getElementById('article-data').textContent); } catch (e) { }
   var total = data.minutes || 0;
   var ticking = false;
   function onScroll() {
