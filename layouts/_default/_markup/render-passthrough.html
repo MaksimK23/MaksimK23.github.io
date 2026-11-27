@@ -4,6 +4,7 @@
   2) Для Telegram Instant View: рядом лежит скрытая картинка-PNG той же формулы.
      PNG создаёт scripts/math-png.mjs после сборки Hugo (см. .github/workflows/hugo.yml).
 */ -}}
+{{- .Page.Store.Set "hasMath" true -}}
 {{- $tex := .Inner -}}
 {{- $block := eq .Type "block" -}}
 {{- $id := substr (sha1 (printf "%s:%s" .Type $tex)) 0 16 -}}

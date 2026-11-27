@@ -2,7 +2,7 @@
 {{- /* Плеер YouTube: до клика — только обложка (быстрая загрузка). Для Instant View адрес хранится в data-src */ -}}
 {{- $poster := "https://i.ytimg.com/vi/$1/maxresdefault.jpg" -}}
 {{- with .Params.image -}}{{- $poster = . | relURL -}}{{- end -}}
-{{- $tpl := printf `<div class="video-slot"><div class="video-wrap" data-yt="$1"><iframe data-src="https://www.youtube-nocookie.com/embed/$1"$2></iframe><button class="yt-facade" type="button" aria-label="Смотреть видео"><img src="%s" alt="" fetchpriority="high" decoding="async"><span class="yt-play" aria-hidden="true"></span><span class="yt-label">Смотреть видео</span></button><div class="mini-bar"><button class="mini-btn" type="button" data-mini-back>↑ К видео</button><button class="mini-btn" type="button" data-mini-close aria-label="Закрыть мини-плеер">✕</button></div></div></div>` $poster -}}
+{{- $tpl := printf `<div class="video-slot"><div class="video-wrap" data-yt="$1"><iframe data-src="https://www.youtube-nocookie.com/embed/$1"$2></iframe><button class="yt-facade" type="button" aria-label="Смотреть видео"><img src="%s" alt="" width="1280" height="720" fetchpriority="high" decoding="async"><span class="yt-play" aria-hidden="true"></span><span class="yt-label">Смотреть видео</span></button><div class="mini-bar"><button class="mini-btn" type="button" data-mini-back>↑ К видео</button><button class="mini-btn" type="button" data-mini-close aria-label="Закрыть мини-плеер">✕</button></div></div></div>` $poster -}}
 {{- $content := .Content | replaceRE `<div class="video-wrap">\s*<iframe\s+src="https://www\.youtube(?:-nocookie)?\.com/embed/([\w-]+)[^"]*"([^>]*)>\s*</iframe>\s*</div>` $tpl -}}
 
 <div class="progress" aria-hidden="true"><span></span></div>

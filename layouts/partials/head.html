@@ -57,17 +57,31 @@
   })();
 </script>
 
+{{ $hasCode := and .IsPage (or (in .RawContent "```") (in .RawContent "~~~")) }}
+{{ $hasMath := false }}
+{{ if .IsPage }}
+  {{ $noop := .Content }}
+  {{ $hasMath = or .Params.math (.Store.Get "hasMath") }}
+{{ end }}
+{{ $hasDoc := and .IsPage (in .RawContent "doc-reader") }}
+
 <link rel="icon" href="{{ "favicon.svg" | relURL }}" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+{{ if or $hasMath $hasDoc }}<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>{{ end }}
+{{ if $hasCode }}
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-
-{{ $css := slice (resources.Get "css/main.css") (resources.Get "css/syntax.css") | resources.Concat "css/site.css" | minify | fingerprint }}
+{{ $css := slice (resources.Get "css/main.css") (resources.Get "css/syntax.css") | resources.Concat "css/site-code.css" | minify | fingerprint }}
 <link rel="stylesheet" href="{{ $css.RelPermalink }}">
+{{ else }}
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+{{ $css := resources.Get "css/main.css" | minify | fingerprint }}
+<link rel="stylesheet" href="{{ $css.RelPermalink }}">
+{{ end }}
 
 {{ with .OutputFormats.Get "rss" }}<link rel="alternate" type="application/rss+xml" href="{{ .RelPermalink }}" title="{{ site.Title }}">{{ end }}
 
 {{/* Формулы рендерятся при сборке; здесь только стили и шрифты KaTeX */}}
-{{ if and .IsPage (or .Params.math (findRE `\$|\\\(|\\\[` .RawContent 1)) }}
+{{ if $hasMath }}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 {{ end }}

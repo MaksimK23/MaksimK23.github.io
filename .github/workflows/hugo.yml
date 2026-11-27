@@ -50,6 +50,14 @@ jobs:
       - name: Картинки формул для Telegram Instant View
         run: npm run math -- public
 
+      - name: Кэш превью-картинок
+        uses: actions/cache@v4
+        with:
+          path: .cache/og
+          key: og-v1-${{ hashFiles('scripts/og-images.mjs', 'content/articles/**') }}
+          restore-keys: |
+            og-v1-
+
       - name: Превью-картинки статей
         run: node scripts/og-images.mjs public
 

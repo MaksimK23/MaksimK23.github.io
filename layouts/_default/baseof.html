@@ -10,8 +10,9 @@
     {{ block "main" . }}{{ end }}
   </main>
   {{ partial "footer.html" . }}
-  {{ with resources.Get "js/main.js" }}
-    {{ $opts := dict "minify" true "targetPath" "js/main.js" }}
+  {{ $jsEntry := cond (and .IsPage (eq .Section "articles")) "js/main.js" "js/site-entry.js" }}
+  {{ with resources.Get $jsEntry }}
+    {{ $opts := dict "minify" true "targetPath" $jsEntry }}
     {{ with . | js.Build $opts | fingerprint }}
       <script src="{{ .RelPermalink }}" integrity="{{ .Data.Integrity }}" crossorigin="anonymous" defer></script>
     {{ end }}

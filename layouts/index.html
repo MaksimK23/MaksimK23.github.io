@@ -60,7 +60,12 @@
   <div class="about-inner">
     <p class="section-label">О проекте</p>
     <div class="about-text">{{ .Content }}</div>
-    <p class="about-stats">{{ len $pages }} {{ cond (eq (len $pages) 1) "статья" (cond (lt (len $pages) 5) "статьи" "статей") }} · {{ $m := 0 }}{{ range $pages }}{{ $m = add $m .ReadingTime }}{{ end }}{{ $m }} мин чтения · <a href="{{ with site.GetPage "/tags" }}{{ .RelPermalink }}{{ end }}">все темы</a></p>
+    {{- $n := len $pages -}}
+    {{- $m10 := mod $n 10 -}}{{- $m100 := mod $n 100 -}}
+    {{- $word := "статей" -}}
+    {{- if and (eq $m10 1) (ne $m100 11) -}}{{- $word = "статья" -}}
+    {{- else if and (ge $m10 2) (le $m10 4) (or (lt $m100 12) (gt $m100 14)) -}}{{- $word = "статьи" -}}{{- end -}}
+    <p class="about-stats">{{ $n }} {{ $word }} · {{ $m := 0 }}{{ range $pages }}{{ $m = add $m .ReadingTime }}{{ end }}{{ $m }} мин чтения · <a href="{{ with site.GetPage "/tags" }}{{ .RelPermalink }}{{ end }}">все темы</a></p>
   </div>
 </section>
 {{ end }}

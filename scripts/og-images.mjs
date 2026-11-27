@@ -3,12 +3,14 @@
 // Hugo кладёт задания в public/og/<имя>.json, скрипт создаёт public/og/<имя>.png
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import opentype from 'opentype.js';
 import { Resvg } from '@resvg/resvg-js';
 
 const OUT = process.argv[2] || 'public';
 const DIR = path.join(OUT, 'og');
+const CACHE_DIR = path.resolve('.cache/og');
 const FONTS = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fonts');
 const F = {
   serif: path.join(FONTS, 'PT_Serif-Web-Bold.ttf'),
@@ -58,9 +60,20 @@ function wrap(text, size, maxLines) {
   return lines;
 }
 
-let n = 0;
+fs.mkdirSync(CACHE_DIR, { recursive: true });
+let n = 0, cached = 0;
 for (const file of fs.readdirSync(DIR).filter(f => f.endsWith('.json'))) {
-  const job = JSON.parse(fs.readFileSync(path.join(DIR, file), 'utf8'));
+  const raw = fs.readFileSync(path.join(DIR, file), 'utf8');
+  const hash = crypto.createHash('sha1').update(raw).digest('hex').slice(0, 16);
+  const cacheFile = path.join(CACHE_DIR, `${hash}.png`);
+  const outPng = path.join(DIR, file.replace(/\.json$/, '.png'));
+  if (fs.existsSync(cacheFile)) {
+    fs.copyFileSync(cacheFile, outPng);
+    fs.unlinkSync(path.join(DIR, file));
+    cached++;
+    continue;
+  }
+  const job = JSON.parse(raw);
   // Подбираем размер заголовка, чтобы он поместился в 4 строки
   let size = 72, lines;
   for (; size >= 46; size -= 2) {
@@ -91,8 +104,9 @@ for (const file of fs.readdirSync(DIR).filter(f => f.endsWith('.json'))) {
   ${tagSvg}
 </svg>`;
   const png = new Resvg(svg, { font: { fontFiles: [F.serif, F.sans, F.sansBold], loadSystemFonts: false, defaultFontFamily: 'PT Sans' } }).render().asPng();
-  fs.writeFileSync(path.join(DIR, file.replace(/\.json$/, '.png')), png);
+  fs.writeFileSync(outPng, png);
+  fs.writeFileSync(cacheFile, png);
   fs.unlinkSync(path.join(DIR, file));
   n++;
 }
-console.log(`Превью статей: ${n}`);
+console.log(`Превью статей: сгенерировано ${n}, из кэша ${cached}`);
