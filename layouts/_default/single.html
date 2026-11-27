@@ -4,11 +4,18 @@
 {{- with .Params.image -}}{{- $poster = . | relURL -}}{{- end -}}
 {{- $tpl := printf `<div class="video-slot"><div class="video-wrap" data-yt="$1"><iframe data-src="https://www.youtube-nocookie.com/embed/$1"$2></iframe><button class="yt-facade" type="button" aria-label="Смотреть видео"><img src="%s" alt="" width="1280" height="720" fetchpriority="high" decoding="async"><span class="yt-play" aria-hidden="true"></span><span class="yt-label">Смотреть видео</span></button><div class="mini-bar"><button class="mini-btn" type="button" data-mini-back>↑ К видео</button><button class="mini-btn" type="button" data-mini-close aria-label="Закрыть мини-плеер">✕</button></div></div></div>` $poster -}}
 {{- $content := .Content | replaceRE `<div class="video-wrap">\s*<iframe\s+src="https://www\.youtube(?:-nocookie)?\.com/embed/([\w-]+)[^"]*"([^>]*)>\s*</iframe>\s*</div>` $tpl -}}
+{{- $content = $content | replaceRE `(?s)(<h3[^>]*>[^<]*Библиографический список.*?)$` `<div data-pagefind-weight="0.2">$1</div>` -}}
+{{- $fmt := partial "format.html" . -}}
 
 <div class="progress" aria-hidden="true"><span></span></div>
 
 <div class="article-layout">
 <article class="article" data-pagefind-body>
+  <span data-pagefind-filter="Формат" hidden>{{ $fmt }}</span>
+  <span data-pagefind-filter="Год" hidden>{{ .Date.Format "2006" }}</span>
+  {{ range .GetTerms "tags" }}<span data-pagefind-filter="Тема" hidden>{{ .LinkTitle }}</span>{{ end }}
+  <span data-pagefind-meta="Дата" hidden>{{ .Date | time.Format ":date_long" }}</span>
+  <span data-pagefind-meta="Чтение" hidden>{{ .ReadingTime }} мин</span>
   <header class="article-head">
     {{ partial "meta.html" . }}
     <h1>{{ .Title }}</h1>

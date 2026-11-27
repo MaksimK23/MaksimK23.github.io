@@ -1,6 +1,7 @@
 {{- $t := partial "thumb.html" . -}}
+{{- $fmt := partial "format.html" . -}}
 {{- $tags := slice -}}{{- range .GetTerms "tags" -}}{{- $tags = $tags | append .LinkTitle -}}{{- end -}}
-<article class="card" data-tags="{{ delimit $tags "|" }}">
+<article class="card" data-tags="{{ delimit $tags "|" }}" data-format="{{ $fmt }}">
   <div class="card-body">
     {{ partial "meta.html" . }}
     <h2 class="card-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>

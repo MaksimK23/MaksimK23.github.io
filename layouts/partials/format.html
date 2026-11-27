@@ -1,0 +1,7 @@
+{{- $fmt := "Статья и теория" -}}
+{{- if or (in .RawContent "youtube.com/embed/") (in .RawContent "youtube-nocookie.com/embed/") -}}
+  {{- $fmt = "Разбор видео" -}}
+{{- else if in .RawContent "doc-reader" -}}
+  {{- $fmt = "Анализ документа" -}}
+{{- end -}}
+{{- return $fmt -}}

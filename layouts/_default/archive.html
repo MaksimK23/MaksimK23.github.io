@@ -1,0 +1,34 @@
+{{ define "main" }}
+{{ $pages := (where site.RegularPages "Section" "articles").ByDate.Reverse }}
+<section class="wrap hero hero-sm">
+  <p class="eyebrow">Хронология</p>
+  <h1>Архив статей</h1>
+  <p class="lede">Все материалы проекта по годам и месяцам — всего {{ len $pages }}.</p>
+</section>
+
+<section class="wrap archive-wrap">
+  {{ range $pages.GroupByDate "2006" }}
+  <div class="archive-year">
+    <h2 class="archive-year-title">{{ .Key }} <span>{{ len .Pages }}</span></h2>
+    {{ range .Pages.GroupByDate "January 2006" }}
+    <div class="archive-month">
+      <h3 class="archive-month-title">{{ (index .Pages 0).Date | time.Format "January" }}</h3>
+      <ol class="archive-list">
+        {{ range .Pages }}
+        {{- $fmt := partial "format.html" . -}}
+        <li class="archive-item">
+          <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date | time.Format "02 Jan" }}</time>
+          <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+          <span class="archive-meta">
+            <span class="archive-fmt">{{ cond (eq $fmt "Разбор видео") "Видео" (cond (eq $fmt "Анализ документа") "Документ" "Статья") }}</span>
+            <span>{{ .ReadingTime }} мин</span>
+          </span>
+        </li>
+        {{ end }}
+      </ol>
+    </div>
+    {{ end }}
+  </div>
+  {{ end }}
+</section>
+{{ end }}

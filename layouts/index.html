@@ -36,19 +36,36 @@
 <section class="wrap list-section" aria-label="Все статьи">
   <div class="list-head">
     <h2 class="section-label">Все статьи</h2>
-    {{ $all := slice }}{{ range $rest }}{{ range .GetTerms "tags" }}{{ $all = $all | append .LinkTitle }}{{ end }}{{ end }}
-    {{ $uniq := $all | uniq }}
-    {{ if and (ge (len $rest) 3) (gt (len $uniq) 1) }}
-    <div class="chips" role="group" aria-label="Фильтр по темам">
-      <button class="chip is-active" type="button" data-filter="" aria-pressed="true">Все <span>{{ len $rest }}</span></button>
-      {{ range $uniq }}{{ $tag := . }}{{ $n := 0 }}{{ range $rest }}{{ range .GetTerms "tags" }}{{ if eq .LinkTitle $tag }}{{ $n = add $n 1 }}{{ end }}{{ end }}{{ end }}
-      <button class="chip" type="button" data-filter="{{ $tag }}" aria-pressed="false">#{{ $tag }} <span>{{ $n }}</span></button>
-      {{ end }}
+    {{- $fmts := slice "Разбор видео" "Анализ документа" "Статья и теория" -}}
+    {{- $tagCounts := slice -}}
+    {{- $all := slice -}}{{- range $rest -}}{{- range .GetTerms "tags" -}}{{- $all = $all | append .LinkTitle -}}{{- end -}}{{- end -}}
+    {{- range ($all | uniq) -}}
+      {{- $tag := . -}}{{- $n := 0 -}}
+      {{- range $rest -}}{{- range .GetTerms "tags" -}}{{- if eq .LinkTitle $tag -}}{{- $n = add $n 1 -}}{{- end -}}{{- end -}}{{- end -}}
+      {{- $tagCounts = $tagCounts | append (dict "tag" $tag "n" $n) -}}
+    {{- end -}}
+    {{- $topTags := first 6 (sort $tagCounts "n" "desc") -}}
+    <div class="chips" role="group" aria-label="Фильтр по формату и темам">
+      <button class="chip is-active" type="button" data-filter="" data-filter-type="all" aria-pressed="true">Все <span>{{ len $rest }}</span></button>
+      {{- range $fmts -}}
+        {{- $f := . -}}{{- $fn := 0 -}}
+        {{- range $rest -}}{{- if eq (partial "format.html" .) $f -}}{{- $fn = add $fn 1 -}}{{- end -}}{{- end -}}
+        {{- if gt $fn 0 -}}
+        <button class="chip chip-fmt" type="button" data-filter="{{ $f }}" data-filter-type="format" aria-pressed="false">{{ $f }} <span>{{ $fn }}</span></button>
+        {{- end -}}
+      {{- end -}}
+      {{- range $topTags -}}
+      <button class="chip" type="button" data-filter="{{ .tag }}" data-filter-type="tag" aria-pressed="false">#{{ .tag }} <span>{{ .n }}</span></button>
+      {{- end -}}
+      <a class="chip chip-more" href="{{ with site.GetPage "/tags" }}{{ .RelPermalink }}{{ end }}">Все темы →</a>
     </div>
-    {{ end }}
   </div>
-  <div class="list">
+  <div class="list" data-page-size="12">
     {{ range $rest }}{{ partial "card.html" . }}{{ end }}
+  </div>
+  <div class="list-actions">
+    <button class="btn list-more-btn" type="button" data-list-more hidden>Показать ещё</button>
+    <a class="btn" href="{{ with site.GetPage "/archive" }}{{ .RelPermalink }}{{ end }}">Весь архив по годам →</a>
   </div>
 </section>
 {{ end }}

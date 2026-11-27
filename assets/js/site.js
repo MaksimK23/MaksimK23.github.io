@@ -66,19 +66,61 @@ export function initSite() {
     });
   });
 
-  /* ═════════ Главная: фильтр по темам ═════════ */
+  /* ═════════ Главная: фильтр по формату и темам + «Показать ещё» ═════════ */
+  var listEl = document.querySelector('.list-section .list');
+  var moreBtn = document.querySelector('[data-list-more]');
+  var allCards = listEl ? Array.prototype.slice.call(listEl.querySelectorAll('.card[data-tags]')) : [];
+  var pageSize = listEl ? (parseInt(listEl.dataset.pageSize || '12', 10) || 12) : 12;
+  var shownLimit = pageSize;
+  var activeFilter = '';
+  var activeType = 'all';
+
+  function applyListView() {
+    if (!allCards.length) return;
+    var matched = allCards.filter(function (c) {
+      if (!activeFilter || activeType === 'all') return true;
+      if (activeType === 'format') return c.dataset.format === activeFilter;
+      return (c.dataset.tags || '').split('|').indexOf(activeFilter) >= 0;
+    });
+    var limit = activeFilter ? matched.length : shownLimit;
+    var visibleSet = new Set(matched.slice(0, limit));
+    allCards.forEach(function (c) { c.hidden = !visibleSet.has(c); });
+    if (moreBtn) {
+      var remaining = matched.length - limit;
+      moreBtn.hidden = remaining <= 0;
+      if (remaining > 0) moreBtn.textContent = 'Показать ещё (' + remaining + ')';
+    }
+  }
+  applyListView();
+  if (moreBtn) {
+    moreBtn.addEventListener('click', function () {
+      shownLimit += pageSize;
+      applyListView();
+    });
+  }
   document.querySelectorAll('.chips').forEach(function (box) {
-    var cards = document.querySelectorAll('.list .card[data-tags]');
     box.addEventListener('click', function (e) {
-      var b = e.target.closest('.chip'); if (!b) return;
-      box.querySelectorAll('.chip').forEach(function (c) {
+      var b = e.target.closest('button.chip'); if (!b) return;
+      box.querySelectorAll('button.chip').forEach(function (c) {
         var active = c === b;
         c.classList.toggle('is-active', active);
         c.setAttribute('aria-pressed', active ? 'true' : 'false');
       });
-      var f = b.dataset.filter;
-      cards.forEach(function (c) { c.hidden = !!f && c.dataset.tags.split('|').indexOf(f) < 0; });
+      activeFilter = b.dataset.filter || '';
+      activeType = b.dataset.filterType || 'tag';
+      applyListView();
     });
+  });
+
+  // Быстрый переход к поиску по клавише "/"
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
+    var inp = document.querySelector('.pagefind-ui__search-input, .home-search input');
+    if (inp) { e.preventDefault(); inp.focus(); inp.select(); return; }
+    var searchLink = document.querySelector('.nav-search');
+    if (searchLink && searchLink.href) { e.preventDefault(); location.href = searchLink.href; }
   });
 
   // Откат превью YouTube: maxresdefault (1280x720) -> sddefault (640x480) -> hqdefault (480x360)
