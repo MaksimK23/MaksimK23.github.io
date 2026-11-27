@@ -1,5 +1,6 @@
 {{ define "main" }}
 {{ $pages := (where site.RegularPages "Section" "articles").ByDate.Reverse }}
+{{- $months := dict "01" "Январь" "02" "Февраль" "03" "Март" "04" "Апрель" "05" "Май" "06" "Июнь" "07" "Июль" "08" "Август" "09" "Сентябрь" "10" "Октябрь" "11" "Ноябрь" "12" "Декабрь" -}}
 <section class="wrap hero hero-sm">
   <p class="eyebrow">Хронология</p>
   <h1>Архив статей</h1>
@@ -10,9 +11,9 @@
   {{ range $pages.GroupByDate "2006" }}
   <div class="archive-year">
     <h2 class="archive-year-title">{{ .Key }} <span>{{ len .Pages }}</span></h2>
-    {{ range .Pages.GroupByDate "January 2006" }}
+    {{ range .Pages.GroupByDate "2006-01" }}
     <div class="archive-month">
-      <h3 class="archive-month-title">{{ (index .Pages 0).Date | time.Format "January" }}</h3>
+      <h3 class="archive-month-title">{{ index $months ((index .Pages 0).Date.Format "01") }}</h3>
       <ol class="archive-list">
         {{ range .Pages }}
         {{- $fmt := partial "format.html" . -}}
